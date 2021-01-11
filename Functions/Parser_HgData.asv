@@ -1,0 +1,62 @@
+function [Labels, Responses] = Parser_HgData(filePath)
+
+fid = fopen(filePath);
+tline = fgetl(fid);
+tlines = cell(0,1);
+while ischar(tline)
+    tlines{end+1,1} = tline;
+    tline = fgetl(fid);
+end
+fclose(fid)
+
+Objective = contains(tlines,'Objective');
+Violation = contains(tlines,'Maximum Constraint Violation');
+DESIGN = contains(tlines,'Design Variable    ');
+DRESP1 = contains(tlines,'DRESP1     ');
+DRESP2 = contains(tlines,'DRESP2     ');
+
+DesignLines = tlines(DESIGN);
+Resp1Lines  = tlines(DRESP1);
+Resp2Lines  = tlines(DRESP2);
+
+for i = 1:length(DesignLines)
+   Temp = DesignLines{i}; 
+   Temp2 = split(Temp);
+   DesignVariables(i) = str2double(Temp2(3));
+end
+
+for i = 1:length(Resp1Lines)
+   Temp = Resp1Lines{i}; 
+   Temp2 = split(Temp);
+   Resp1(i) = str2double(Temp2(2));
+end
+
+for i = 1:length(Resp2Lines)
+   Temp = Resp2Lines{i}; 
+   Temp2 = split(Temp);
+   Resp2{i} = str2double(Temp2(2));
+end
+
+LinesOfInterest = 2 + length(DesignVariables) + length(Resp1) + length(Resp2);
+LineStart       = find(contains(tlines,'    0'));
+
+%Find last iteration.
+LastIter        = floor((length(tlines)-LineStart) / LinesOfInterest)-1;
+LastIterLine    = LineStart + LastIter*(LinesOfInterest+1) + 1;
+
+Responses = zeros(LinesOfInterest,1);
+Iter = LastIterLine:LastIterLine+LinesOfInterest-1;
+
+
+for i = 1:length(Iter)
+    Responses(i) = str2double(tlines{Iter(i)});
+end
+
+Labels{1:length(DESIGN)} = DESIGN;
+Labels{length(DESIGN)+1} = Objective;
+Labels{length(DESIGN)+2} = Violation;
+Labels{length(DESIGN)+3:
+
+
+end
+

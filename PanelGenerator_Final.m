@@ -18,7 +18,7 @@ axialLoad       = -120120;
 
 %% Initialize the list of layout codes.
 
-MaxLayouts  = 10*16;
+MaxLayouts  = 500;
 MaxV        = 10;
 MaxH        = 10;
 
@@ -91,9 +91,12 @@ Responses       = {};
 Variables       = {};
 Sensibilities   = {};
 
+Sizing = 1;
+Echo   = 0;
+
 tic
 warning off
-parfor i = 1:length(SortedGraphs)
+parfor i = 1:80%length(SortedGraphs)
 
     XB =    XBegs{i};
     YB =    YBegs{i};
@@ -110,7 +113,7 @@ parfor i = 1:length(SortedGraphs)
     Values = {PanelLength, PanelHeight, XB, YB,XE,YE, StiffHeight, Matname, young, poisson, rho, Fcy, meshSize, axialLoad};
 
     % try
-        [Responses{i}, Variables{i}, Sensibilities{i}] = RunHyperMesh(Names, Values, folderName,0);
+        [Responses{i}, Variables{i}, Sensibilities{i}] = RunHyperMesh(Names, Values, folderName,Sizing,Echo);
     % end
 
     fprintf('Completed Solution %i\n',i)
@@ -119,17 +122,55 @@ end
 toc
 warning on
 
-%% Format the outputs for post-processing.
+%% Format the outputs for post-processing of sizing.
+
+% Create complexity Variable. 
+Comp = [];
+for i = 1 : length(Responses)
+   Comp(i)      = SortedGraphs{i}.GeomComplex;
+   labels{i}    = SortedGraphs{i}.Code;
+end
+
 
 Mass        =   zeros(length(Responses),1);
 B1          =   zeros(length(Responses),1);
 
 for i = 1:length(Responses)
-   Mass(i)      = Responses{i}.mass;
-   B1(i)        = Responses{i}.B_1;
+   Mass(i)      = Responses{i}(1);
+   B1(i)        = Responses{i}(2);
 end
+ 
+SM_Ratio = (B1-1) ./ Mass * 100;
 
-SM_Ratio = B1 ./ Mass;
+figure(1)
+clf
+subplot(3,1,1)
+% scatter(Comp,Mass)
+labelpoints (Comp', Mass, labels,'adjust_axes',1)
+ylim([0 max(Mass)*1.10])
+ylabel('MASS')
+subplot(3,1,2)
+% scatter(Comp,B1)
+labelpoints (Comp', B1, labels,'adjust_axes',1)
+ylim([0 max(B1)*1.10])
+ylabel('Buckling')
+subplot(3,1,3)
+% scatter(Comp,SM_Ratio)
+labelpoints (Comp', SM_Ratio, labels,'adjust_axes',1)
+ylabel('RATIO')
+ylim([0 max(SM_Ratio)*1.10])
+
+% %% Format the outputs for post-processing.
+% 
+% Mass        =   zeros(length(Responses),1);
+% B1          =   zeros(length(Responses),1);
+% 
+% for i = 1:length(Responses)
+%    Mass(i)      = Responses{i}.mass;
+%    B1(i)        = Responses{i}.B_1;
+% end
+% 
+% SM_Ratio = B1 ./ Mass;
 
 %% Check Sensibilities for compliance only.
 % % 
