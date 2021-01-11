@@ -1,2 +1,2 @@
 
-Copyright (C) 2021 
+Copyright(C) Jean-François Gamache 2021 
