@@ -1,5 +1,6 @@
 clear all
 clc
+close all
 addpath('Functions')
 addpath('Classes')
 
@@ -18,9 +19,10 @@ axialLoad       = -120120;
 
 %% Initialize the list of layout codes.
 
-MaxLayouts  = 500;
-MaxV        = 10;
-MaxH        = 10;
+MaxLayouts      = 2000;
+MaxEvaluations  = 160;
+MaxV            = 10;
+MaxH            = 10;
 
 tic
 AllCodes = createLayouts(MaxLayouts,MaxV, MaxH);
@@ -48,6 +50,10 @@ end
 
 SortedGraphs = {};
 SortedGraphs = AllLayouts(ID);
+
+% Plot an histogram of complexities. 
+figure(69)
+hist(Comps,[0:10:1000])
 
 %% Translate from graph to parametric file.
 
@@ -91,12 +97,22 @@ Responses       = {};
 Variables       = {};
 Sensibilities   = {};
 
-Sizing = 1;
+Sizing = 0;
 Echo   = 0;
 
 tic
 warning off
-parfor i = 1:80%length(SortedGraphs)
+
+% Initialize waitbar.
+global p N BAR
+p = 1;
+N = 200;
+
+D = parallel.pool.DataQueue;
+BAR = waitbar(0,'Measuring Potential of Layouts...');
+afterEach(D,@nUpdateWaitBar);
+
+parfor i = 1:N%length(SortedGraphs)
 
     XB =    XBegs{i};
     YB =    YBegs{i};
@@ -112,13 +128,14 @@ parfor i = 1:80%length(SortedGraphs)
     Names  = {'::Geometry::PanelLength', '::Geometry::PanelHeight', '::Geometry::XBeg', '::Geometry::YBeg', '::Geometry::XEnd', '::Geometry::YEnd', '::Geometry::StiffHeight', '::Material::Matname', '::Material::young ', '::Material::poisson', '::Material::rho', '::Material::Fcy', '::Mesh::meshSize ', '::BCs::axialLoad'};
     Values = {PanelLength, PanelHeight, XB, YB,XE,YE, StiffHeight, Matname, young, poisson, rho, Fcy, meshSize, axialLoad};
 
-    % try
-        [Responses{i}, Variables{i}, Sensibilities{i}] = RunHyperMesh(Names, Values, folderName,Sizing,Echo);
-    % end
+    [Responses{i}, Variables{i}, Sensibilities{i}] = RunHyperMesh(Names, Values, folderName,Sizing,Echo);
 
-    fprintf('Completed Solution %i\n',i)
+    send(D,i);
     
 end
+
+close(BAR)
+
 toc
 warning on
 
@@ -159,6 +176,13 @@ subplot(3,1,3)
 labelpoints (Comp', SM_Ratio, labels,'adjust_axes',1)
 ylabel('RATIO')
 ylim([0 max(SM_Ratio)*1.10])
+
+figure(2)
+clf
+labelpoints (Mass, B1, labels,'adjust_axes',1)
+xlabel('MASS')
+ylabel('Buckling')
+
 
 % %% Format the outputs for post-processing.
 % 
@@ -207,3 +231,9 @@ ylim([0 max(SM_Ratio)*1.10])
 %     title(AllCodes(i))
 %     pause 
 % end
+
+function nUpdateWaitBar(~)
+    global p N BAR
+    waitbar(p/N,BAR);
+    p = p+1;
+end
