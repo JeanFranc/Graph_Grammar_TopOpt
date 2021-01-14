@@ -1,4 +1,4 @@
-function [responses, variables, sensibilities] = RunHyperMesh(Names,Values, folderName,Optim, echo)
+function [responses, variables, sensibilities] = RunHyperMesh(Names,Values, folderName,Optim, echo, Buck)
 
 % Make sure that the targeted folder is empty. 
 try
@@ -11,6 +11,8 @@ CreateParam(Names, Values,folderName)
 
 if Optim
     source = "C:\Users\JfGam\Dropbox\Documents\02 Polytechnique\01 - Doctorat\21 Code\Hypermesh-TCL\MultiStep_Optimization\ThreeStepTopo\Main_Sizing.tcl";
+elseif ~Optim && ~Buck
+    source = "C:\Users\JfGam\Dropbox\Documents\02 Polytechnique\01 - Doctorat\21 Code\Hypermesh-TCL\MultiStep_Optimization\ThreeStepTopo\Main_NoBuck.tcl";
 else
     source = "C:\Users\JfGam\Dropbox\Documents\02 Polytechnique\01 - Doctorat\21 Code\Hypermesh-TCL\MultiStep_Optimization\ThreeStepTopo\Main.tcl";
 end

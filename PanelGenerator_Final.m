@@ -19,7 +19,7 @@ axialLoad       = -120120;
 
 %% Initialize the list of layout codes.
 
-MaxLayouts      = 2000;
+MaxLayouts      = 400;
 MaxEvaluations  = 160;
 MaxV            = 10;
 MaxH            = 10;
@@ -52,8 +52,10 @@ SortedGraphs = {};
 SortedGraphs = AllLayouts(ID);
 
 % Plot an histogram of complexities. 
-figure(69)
-hist(Comps,[0:10:1000])
+figure(1000)
+hist(Comps,[0:10:max(Comps)])
+xlabel('Geometric Complexity')
+xlim([0 max(Comps)*1.10])
 
 %% Translate from graph to parametric file.
 
@@ -99,6 +101,7 @@ Sensibilities   = {};
 
 Sizing = 0;
 Echo   = 0;
+Buck   = 0;
 
 tic
 warning off
@@ -106,7 +109,7 @@ warning off
 % Initialize waitbar.
 global p N BAR
 p = 1;
-N = 200;
+N = 8;
 
 D = parallel.pool.DataQueue;
 BAR = waitbar(0,'Measuring Potential of Layouts...');
@@ -128,7 +131,7 @@ parfor i = 1:N%length(SortedGraphs)
     Names  = {'::Geometry::PanelLength', '::Geometry::PanelHeight', '::Geometry::XBeg', '::Geometry::YBeg', '::Geometry::XEnd', '::Geometry::YEnd', '::Geometry::StiffHeight', '::Material::Matname', '::Material::young ', '::Material::poisson', '::Material::rho', '::Material::Fcy', '::Mesh::meshSize ', '::BCs::axialLoad'};
     Values = {PanelLength, PanelHeight, XB, YB,XE,YE, StiffHeight, Matname, young, poisson, rho, Fcy, meshSize, axialLoad};
 
-    [Responses{i}, Variables{i}, Sensibilities{i}] = RunHyperMesh(Names, Values, folderName,Sizing,Echo);
+    [Responses{i}, Variables{i}, Sensibilities{i}] = RunHyperMesh(Names, Values, folderName,Sizing,Echo,Buck);
 
     send(D,i);
     
@@ -162,24 +165,26 @@ SM_Ratio = (B1-1) ./ Mass * 100;
 figure(1)
 clf
 subplot(3,1,1)
-% scatter(Comp,Mass)
-labelpoints (Comp', Mass, labels,'adjust_axes',1)
+scatter(Comp,Mass)
+% labelpoints (Comp', Mass, labels,'adjust_axes',1)
 ylim([0 max(Mass)*1.10])
 ylabel('MASS')
 subplot(3,1,2)
-% scatter(Comp,B1)
-labelpoints (Comp', B1, labels,'adjust_axes',1)
+scatter(Comp,B1)
+% labelpoints (Comp', B1, labels,'adjust_axes',1)
 ylim([0 max(B1)*1.10])
 ylabel('Buckling')
 subplot(3,1,3)
-% scatter(Comp,SM_Ratio)
-labelpoints (Comp', SM_Ratio, labels,'adjust_axes',1)
+scatter(Comp,SM_Ratio)
+% labelpoints (Comp', SM_Ratio, labels,'adjust_axes',1)
 ylabel('RATIO')
+xlabel('Geometric Complexity')
 ylim([0 max(SM_Ratio)*1.10])
 
 figure(2)
 clf
-labelpoints (Mass, B1, labels,'adjust_axes',1)
+scatter(Mass, B1)
+% labelpoints (Mass, B1, labels,'adjust_axes',1)
 xlabel('MASS')
 ylabel('Buckling')
 
