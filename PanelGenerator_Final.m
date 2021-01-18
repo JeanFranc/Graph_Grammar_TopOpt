@@ -6,21 +6,36 @@ addpath('Classes')
 
 %% Defines initial parameters.
 
-PanelLength     = 60.0;
-PanelHeight     = 50/3;
+% Panel Properties
+PanelLength     = 20.0;
+PanelHeight     = 20.0;
 StiffHeight     = 1.5;
+
+% Material Properties
 Matname         = 'Alum_7075';
 young           = 10700000;
 poisson         = 0.33;
 rho             = 0.1;
 Fcy             = 68000;
+
+% Mesh Properties
 meshSize        = 0.5;
-axialLoad       = -120120;
+
+% Boundary Conditions
+LoadType        = "AxialCompression";
+Load            = 120120;
+NumberOfRibs    = 1;
+SideConditions  = "SimplySupported";
+
+% Analysis, Sizing, Sensibilities Properties.
+G_Buckling        = 0;
+G_Stress          = 0;
+G_Sizing          = 0;
+G_Complexity      = 1;
 
 %% Initialize the list of layout codes.
 
-MaxLayouts      = 400;
-MaxEvaluations  = 160;
+MaxLayouts      = 100;
 MaxV            = 10;
 MaxH            = 10;
 
@@ -66,6 +81,7 @@ YEnds = {};
 tic
 % First, find the geometrical center of each stiffener.
 for i = 1:length(SortedGraphs)
+    
     ThisGraph = SortedGraphs{i}.Graph;
     EndNodes = ThisGraph.Edges.EndNodes;
     Nodes    = table2array(ThisGraph.Nodes);
@@ -83,6 +99,7 @@ for i = 1:length(SortedGraphs)
         XEnds{end+1} = XEnd;
         YEnds{end+1} = YEnd;
     end
+    
 end
 fprintf('Translating codes \t ... %1.1f seconds\n',toc);
 
@@ -115,6 +132,11 @@ D = parallel.pool.DataQueue;
 BAR = waitbar(0,'Measuring Potential of Layouts...');
 afterEach(D,@nUpdateWaitBar);
 
+Responses        = cell(1,N);
+Labels           = cell(1,N);
+Variables        = cell(1,N);
+Sensibilities    = cell(1,N);
+
 parfor i = 1:N%length(SortedGraphs)
 
     XB =    XBegs{i};
@@ -126,12 +148,52 @@ parfor i = 1:N%length(SortedGraphs)
     folderName = sprintf('D:/Runs/Evaluation_%i',i); 
 
     % Specify parameters names and values. 
-    
-    % TO DO : Add the names and fields to a read me. 
-    Names  = {'::Geometry::PanelLength', '::Geometry::PanelHeight', '::Geometry::XBeg', '::Geometry::YBeg', '::Geometry::XEnd', '::Geometry::YEnd', '::Geometry::StiffHeight', '::Material::Matname', '::Material::young ', '::Material::poisson', '::Material::rho', '::Material::Fcy', '::Mesh::meshSize ', '::BCs::axialLoad'};
-    Values = {PanelLength, PanelHeight, XB, YB,XE,YE, StiffHeight, Matname, young, poisson, rho, Fcy, meshSize, axialLoad};
 
-    [Responses{i}, Variables{i}, Sensibilities{i}] = RunHyperMesh(Names, Values, folderName,Sizing,Echo,Buck);
+    Names  = {  '::Geometry::PanelLength',  ...
+                '::Geometry::PanelHeight',  ...
+                '::Geometry::NumberOfRibs', ...
+                '::Geometry::XBeg',         ...
+                '::Geometry::YBeg',         ...
+                '::Geometry::XEnd',         ...
+                '::Geometry::YEnd',         ...
+                '::Geometry::StiffHeight',  ...
+                '::Material::Matname',      ...
+                '::Material::young ',       ...
+                '::Material::poisson',      ...
+                '::Material::rho',          ...
+                '::Material::Fcy',          ...
+                '::Mesh::meshSize ',        ...
+                '::BCs::Load',              ...
+                '::BCs::LoadType',          ...
+                '::BCs::SideConditions',    ...
+                '::General::Buckling',      ...
+                '::General::Stress',        ...
+                '::General::Sizing', 		...
+                '::General::Complexity'     };
+            
+    Values = {  PanelLength,    ...
+                PanelHeight,    ...
+                NumberOfRibs,   ...
+                XB,             ...
+                YB,             ...
+                XE,             ...
+                YE,             ...
+                StiffHeight,    ...
+                Matname,        ...
+                young,          ...
+                poisson,        ...
+                rho,            ...
+                Fcy,            ...
+                meshSize,       ...
+                Load,           ...
+                LoadType,       ...
+                SideConditions, ...
+                G_Buckling,     ...
+                G_Stress,       ...
+                G_Sizing,       ...
+                G_Complexity    };
+
+    [Responses{i},Labels{i}, Variables{i}, Sensibilities{i}] = RunHyperMesh(Names, Values, folderName,Echo);
 
     send(D,i);
     
@@ -144,49 +206,49 @@ warning on
 
 %% Format the outputs for post-processing of sizing.
 
-% Create complexity Variable. 
-Comp = [];
-for i = 1 : length(Responses)
-   Comp(i)      = SortedGraphs{i}.GeomComplex;
-   labels{i}    = SortedGraphs{i}.Code;
-end
-
-
-Mass        =   zeros(length(Responses),1);
-B1          =   zeros(length(Responses),1);
-
-for i = 1:length(Responses)
-   Mass(i)      = Responses{i}(1);
-   B1(i)        = Responses{i}(2);
-end
- 
-SM_Ratio = (B1-1) ./ Mass * 100;
-
-figure(1)
-clf
-subplot(3,1,1)
-scatter(Comp,Mass)
-% labelpoints (Comp', Mass, labels,'adjust_axes',1)
-ylim([0 max(Mass)*1.10])
-ylabel('MASS')
-subplot(3,1,2)
-scatter(Comp,B1)
-% labelpoints (Comp', B1, labels,'adjust_axes',1)
-ylim([0 max(B1)*1.10])
-ylabel('Buckling')
-subplot(3,1,3)
-scatter(Comp,SM_Ratio)
-% labelpoints (Comp', SM_Ratio, labels,'adjust_axes',1)
-ylabel('RATIO')
-xlabel('Geometric Complexity')
-ylim([0 max(SM_Ratio)*1.10])
-
-figure(2)
-clf
-scatter(Mass, B1)
-% labelpoints (Mass, B1, labels,'adjust_axes',1)
-xlabel('MASS')
-ylabel('Buckling')
+% % Create complexity Variable. 
+% Comp = [];
+% for i = 1 : length(Responses)
+%    Comp(i)      = SortedGraphs{i}.GeomComplex;
+%    labels{i}    = SortedGraphs{i}.Code;
+% end
+% 
+% 
+% Mass        =   zeros(length(Responses),1);
+% B1          =   zeros(length(Responses),1);
+% 
+% for i = 1:length(Responses)
+%    Mass(i)      = Responses{i}(1);
+%    B1(i)        = Responses{i}(2);
+% end
+%  
+% SM_Ratio = (B1-1) ./ Mass * 100;
+% 
+% figure(1)
+% clf
+% subplot(3,1,1)
+% scatter(Comp,Mass)
+% % labelpoints (Comp', Mass, labels,'adjust_axes',1)
+% ylim([0 max(Mass)*1.10])
+% ylabel('MASS')
+% subplot(3,1,2)
+% scatter(Comp,B1)
+% % labelpoints (Comp', B1, labels,'adjust_axes',1)
+% ylim([0 max(B1)*1.10])
+% ylabel('Buckling')
+% subplot(3,1,3)
+% scatter(Comp,SM_Ratio)
+% % labelpoints (Comp', SM_Ratio, labels,'adjust_axes',1)
+% ylabel('RATIO')
+% xlabel('Geometric Complexity')
+% ylim([0 max(SM_Ratio)*1.10])
+% 
+% figure(2)
+% clf
+% scatter(Mass, B1)
+% % labelpoints (Mass, B1, labels,'adjust_axes',1)
+% xlabel('MASS')
+% ylabel('Buckling')
 
 
 % %% Format the outputs for post-processing.

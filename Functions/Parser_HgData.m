@@ -19,6 +19,10 @@ DesignLines = tlines(DESIGN);
 Resp1Lines  = tlines(DRESP1);
 Resp2Lines  = tlines(DRESP2);
 
+DesignVariables     = {};
+Resp1               = {};
+Resp2               = {};
+
 for i = 1:length(DesignLines)
    Temp = DesignLines{i}; 
    Temp2 = split(Temp);

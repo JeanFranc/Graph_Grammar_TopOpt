@@ -47,8 +47,11 @@ classdef Layout_Class
         function obj = set_graph(obj)
             
             % Initialize grid placement.
-            GridX =  linspace(0,obj.Full_L,obj.V_Stiffs+2);
-            GridY =  linspace(0,obj.Full_H,obj.H_Stiffs+2);
+%             GridX =  linspace(0,obj.Full_L,obj.V_Stiffs+2);
+%             GridY =  linspace(0,obj.Full_H,obj.H_Stiffs+2);
+
+            GridX =  linspace(0,1,obj.V_Stiffs+2);
+            GridY =  linspace(0,1,obj.H_Stiffs+2);
             
             [GX, GY] = meshgrid(GridX, GridY);
             
