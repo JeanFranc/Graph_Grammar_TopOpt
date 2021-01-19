@@ -24,17 +24,17 @@ catch
     error(folderName)
 end
 
-% Find if Complexity.
-Comp_ID = contains(Names,'::General::Complexity');
-COMP    = Values(Comp_ID);
-COMP    = COMP{1};
-
 fileName        = strcat(folderName, '/Sensi_1.hgdata');
 [resp_labels,responses, variables] = Parser_HgData(fileName); 
 
-if COMP
+% Find if Complexity.
+Comp_ID = contains(Names,'::General::Complexity');
+COMP    = Values(Comp_ID);
+
+if COMP{1}
     fileName        = strcat(folderName, '/Sensi_1.sensitivities.txt');
-    sensibilities   = readtable(fileName);
+    sensibilities   = sortrows(readtable(fileName),1);
+    sensibilities   = sensibilities(sensibilities.mass ~= 0,:);
 else
     sensibilities = NaN;
 end

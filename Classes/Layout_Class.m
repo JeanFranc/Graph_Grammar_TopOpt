@@ -8,6 +8,7 @@ classdef Layout_Class
         Full_H          = [];
         Full_L          = [];
         Code            = "";
+        Symmetry        = [0 0];
     end
     
     properties(SetAccess=private)
@@ -19,7 +20,7 @@ classdef Layout_Class
     
     methods
         
-        function obj = Layout_Class(InputString, Full_H, Full_L)
+        function obj = Layout_Class(InputString, Full_H, Full_L, Symmetry)
             
             Inputs = regexp(InputString," ",'split');
             
@@ -42,14 +43,12 @@ classdef Layout_Class
             obj.Full_H          = Full_H;
             obj.Full_L          = Full_L;
             obj.Code            = InputString;
+            obj.Symmetry        = Symmetry;
+            
         end
         
         function obj = set_graph(obj)
             
-            % Initialize grid placement.
-%             GridX =  linspace(0,obj.Full_L,obj.V_Stiffs+2);
-%             GridY =  linspace(0,obj.Full_H,obj.H_Stiffs+2);
-
             GridX =  linspace(0,1,obj.V_Stiffs+2);
             GridY =  linspace(0,1,obj.H_Stiffs+2);
             
@@ -112,7 +111,7 @@ classdef Layout_Class
             end
             
             Points = table2array([Graph_Stiffs.Nodes(:,'X'),Graph_Stiffs.Nodes(:,'Y')]);
-            Lines = table2array(Graph_Stiffs.Edges(:,'EndNodes'));
+            Lines  = table2array(Graph_Stiffs.Edges(:,'EndNodes'));
             
             % Build the ALL_LINES matrix.
             ALL_LINES = [Points(Lines(:,1),:),Points(Lines(:,2),:)];
@@ -137,15 +136,17 @@ classdef Layout_Class
                 Segi(i) = size(Pos,1) + 1;
                 
             end
+           
             
             [UniqueIntersects, ~, b]    = unique(round(InterPoints,3,'significant'),'rows');
             
+            
             Comp = 0;
             for i = 1:max(b)
-               Comp = Comp + (sum(b == i)-1).^3;  
+                Comp = Comp + (sum(b == i)-1).^3;
             end
             
-            % Evaluate Complexity.   
+            % Evaluate Complexity.
             RealIntersect       = size(UniqueIntersects,1);
             RealSegments        = sum(Segi);
             
