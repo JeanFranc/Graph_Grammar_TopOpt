@@ -331,14 +331,16 @@ classdef Layout_Class_V2
                 % Create new Edges. 
                 for i = 1:size(CrossedEdges_2,1)
                     
+                    
+                    
                     % Find position of new Nodes;
                     NNTemp = NewNodes(CrossedEdges_2{i,2});
                     
                     NN_Pos = [];
-                    for j = 1:length(NNTemp)
-                        NN_ID = ThisGraph.findnode(NNTemp{j});
-                        NN_Pos(j,1) = ThisGraph.Nodes.X(NN_ID);
-                        NN_Pos(j,2) = ThisGraph.Nodes.Y(NN_ID);
+                    for i = 1:length(NNTemp)
+                        NN_ID = ThisGraph.findnode(NNTemp{i});
+                        NN_Pos(i,1) = ThisGraph.Nodes.X(NN_ID);
+                        NN_Pos(i,2) = ThisGraph.Nodes.Y(NN_ID);
                     end
                     % Find endnodes of current edges. 
                     EdgeID          = find(Names == CrossedEdges_2{i,1});
@@ -351,40 +353,61 @@ classdef Layout_Class_V2
                     EndNode2_Pos = [ThisGraph.Nodes.X(EndNode2_ID),ThisGraph.Nodes.Y(EndNode2_ID)];
                 
                     EdgeVector   = [EndNode2_Pos(1) - EndNode1_Pos(1), EndNode2_Pos(2) - EndNode1_Pos(2)];
-
-                    % Sort using vectorial projection;
-                    [~,ID2] = sort(NN_Pos * EdgeVector');
-
-                    SortedNewNodes = [This_EndNodes(1),NNTemp(ID2),This_EndNodes(2)];
                     
-                    for j = 1:length(SortedNewNodes)-1
-     
-                        Node1_ID  = ThisGraph.findnode(SortedNewNodes(j));
-                        Node2_ID  = ThisGraph.findnode(SortedNewNodes(j+1));
-                        
-                        Pos1 = [ThisGraph.Nodes.X(Node1_ID),ThisGraph.Nodes.Y(Node1_ID)];
-                        Pos2 = [ThisGraph.Nodes.X(Node2_ID),ThisGraph.Nodes.Y(Node2_ID)];
-
-                        % Create the new edge between the nodes.
-                        EdgeLength  = {norm(Pos1-Pos2)};
-
-                        newEdge = table({SortedNewNodes{j}, SortedNewNodes{j+1}},1,obj.EdgeIt,EdgeLength,'VariableNames',{'EndNodes','Weight','Name','Length'});
-                        obj.EdgeIt = obj.EdgeIt + 1;
-                        ThisGraph = ThisGraph.addedge(newEdge);
-                
-                    end
+                    
+                    AllPoints    = [EndNode1_Pos;EndNode2_Pos;NN_Pos];
                     
                 end
                 
-                %Delete the old edges.
-                for i = 1:size(CrossedEdges,1)
-                    for j = 1:length(CrossedEdges{i,1})
-                        Names = ThisGraph.Edges.Name;
-                        ToRemove = find(Names == CrossedEdges{i,1}(j));
-                        ThisGraph = ThisGraph.rmedge(ToRemove);
-                    end
-                end
-
+                disp('TEST')
+                
+                %             % Create new Points and adjust Edges.
+                %             for i = 1:size(CrossedEdges,1)
+                %
+                %                 newName      = {['N',num2str(obj.NodeIt)]};
+                %                 obj.NodeIt = obj.NodeIt + 1;
+                %
+                %                 % Create new Node in the Graph.
+                %                 newNode = table(CrossedEdges{i,2}(1),CrossedEdges{i,2}(2),newName,'VariableNames',{'X','Y','Name'});
+                %                 ThisGraph   = addnode(ThisGraph,newNode);
+                %
+                %                 Names = ThisGraph.Edges.Name;
+                %
+                %                 % Find the Existing EndNodes.
+                %                 EN = {};
+                %                 for j = 1:length(CrossedEdges{i,1})
+                %                     ToSearch = find(Names == CrossedEdges{i,1}(j));
+                %                     Temp = ThisGraph.Edges.EndNodes(ToSearch,:);
+                %                     EN(j,:) = Temp;
+                %                 end
+                %
+                %                 % Create and append the new Edges.
+                %                 EN = EN(:);
+                %                 for j = 1:length(EN)
+                %                     Node1_ID = ThisGraph.findnode(EN{j});
+                %                     Node2_ID = ThisGraph.findnode(newName{1});
+                %
+                %                     Pos1 = [ThisGraph.Nodes.X(Node1_ID),ThisGraph.Nodes.Y(Node1_ID)];
+                %                     Pos2 = [ThisGraph.Nodes.X(Node2_ID),ThisGraph.Nodes.Y(Node2_ID)];
+                %
+                %                     % Create the new edge between the nodes.
+                %                     EdgeLength  = {norm(Pos1-Pos2)};
+                %
+                %                     newEdge = table({EN{j}, newName{1}},1,obj.EdgeIt,EdgeLength,'VariableNames',{'EndNodes','Weight','Name','Length'});
+                %                     obj.EdgeIt = obj.EdgeIt + 1;
+                %                     ThisGraph = ThisGraph.addedge(newEdge);
+                %                 end
+                %
+                %             end
+                
+                %             % Delete the old edges.
+                %             for i = 1:size(CrossedEdges,1)
+                %                 for j = 1:length(CrossedEdges{i,1})
+                %                     Names = ThisGraph.Edges.Name;
+                %                     ToRemove = find(Names == CrossedEdges{i,1}(j));
+                %                     ThisGraph = ThisGraph.rmedge(ToRemove);
+                %                 end
+                %             end
             end
             
             obj.Graph = ThisGraph;

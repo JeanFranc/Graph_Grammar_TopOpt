@@ -28,9 +28,11 @@ Just_A_X = SplitSides.AppendRules('T3-BR-TL,T3-BL-TR');
 Just_A_X.PlotGraph;
 pause(0.25)
 
-%%
-
-Tester = FourBar.AppendRules('T3-BR-TL');
+% %%
+% 
+tic
+Tester = FourBar.AppendRules('T3-BR-TL,T3-BL-TR');
+toc
 clf
 Tester.PlotGraph;
 pause(0.25)
