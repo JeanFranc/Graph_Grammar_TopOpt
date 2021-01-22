@@ -11,7 +11,7 @@ classdef Layout_Class_V2
         maxEdges        = 15;
         
         maxEdgePerNode  = 6;
-        minEdgeLength   = 0;
+        minEdgeLength   = 0.2;
         
     end
     
@@ -137,24 +137,89 @@ classdef Layout_Class_V2
             % Measure the possibilities for T1: SplitEdges.
             if ~isempty(ThisGraph.Edges.Name) && length(ThisGraph.Edges.Name) < obj.maxNodes
                 Actions{1,1} = true;
-                Actions{1,2} = length(ThisGraph.Edges.Name)*obj.maxSplit;
+                Temp = cell(height(ThisGraph.Edges)*obj.maxSplit,1);
+                it = 1;
+                for i = 1:height(ThisGraph.Edges)
+                    for j = 1:obj.maxSplit
+                        str = sprintf('T1-%i-%i',ThisGraph.Edges.Name(i),j);
+                        Temp{it} = str;
+                        it = it + 1;
+                    end
+                end
+                Actions{1,2} = Temp;
             else
                 Actions{1,1} = false;
+                Actions{1,2} = 0;
             end
             
             % Measure the possibilities for T2: DeleteNode.
-            if length(ThisGraph.Nodes.Name) > 4
+            if height(ThisGraph.Nodes) > 4
+                
                 Actions{2,1} = true;
-                Actions{2,2} = length(ThisGraph.Nodes.Name) - 4; % Minus four to remove the corners, which should always be there.
+                Temp = cell(height(ThisGraph.Nodes) - 4,1);
+                it = 1;
+                for i = 1:length(ThisGraph.Nodes.Name)
+                    name = ThisGraph.Nodes.Name{i};
+                    if strcmp(name(1),'N')
+                        str = sprintf('T2-%s',name);
+                        Temp{it} = str;
+                        it = it + 1;
+                    end
+                end
+                
+                Actions{2,2} = Temp;
             else
                 Actions{2,1} = false;
+                Actions{2,2} = 0;
             end
-            
+
             % Measure the possibilities for T3: AddEdge.
-            if length(ThisGraph.Edges.Name) < obj.maxEdges
+            LengthOfEdges = cell2mat(ThisGraph.Edges.Length);
+            if length(ThisGraph.Edges.Name) < obj.maxEdges && max(LengthOfEdges) > obj.minEdgeLength;
+                Actions{3,1} = true;
+                
+                Combinations = string(nchoosek(ThisGraph.Nodes.Name,2));
+                Existing     = string(ThisGraph.Edges.EndNodes);
+                
+                ToRemove = [];
+                for i = 1:size(Combinations,1)
+                    %Check if anylines contains "new" combinations.
+                    test  = contains(Existing, Combinations(i,:));
+                    if any(all(test,2))
+                        ToRemove(i) = 1;
+                    else
+                        ToRemove(i) = 0;
+                    end
+                end
+                
+                NewCombinations = Combinations(~ToRemove,:);
+
+                Temp = cell(size(NewCombinations,1),1);
+                for i = 1:size(NewCombinations,1)
+                    str = sprintf('T3-%s-%s',NewCombinations(i,1),NewCombinations(i,2));
+                    Temp{i} = str;
+                end
+                
+                Actions{3,2} = Temp;
                 
             else
                 Actions{3,1} = false;
+                Actions{3,2} = 0;
+            end
+            
+            if height(ThisGraph.Edges) > 0
+                Actions{4,1} = true;
+                Temp = cell(height(ThisGraph.Edges),1);
+                for i = 1:length(ThisGraph.Edges.Name)
+                    name = ThisGraph.Edges.Name(i);
+                    str = sprintf('T4-%i',name);
+                    Temp{i} = str;
+                end
+                
+                Actions{4,2} = Temp;
+            else
+                Actions{4,1} = false; 
+                Actions{4,2} = 0;
             end
             
         end

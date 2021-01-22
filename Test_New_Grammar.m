@@ -4,40 +4,40 @@ clc
 
 addpath('Classes')
 addpath('Functions')
+addpath('TCL')
 
-% Initial Testing.
+%%
 
 figure(1)
 clf
-InitLayout = Layout_Class_V2;
+InitLayout  = Layout_Class_V2;
 InitLayout.PlotGraph;
 pause(0.25)
 
 clf
-SplitSides = InitLayout.AppendRules('T1-02-03,T1-03-03');
+SplitSides  = InitLayout.AppendRules('T1-02-03,T1-03-03');
 SplitSides.PlotGraph;
 pause(0.25)
 
 clf
-FourBar    = SplitSides.AppendRules('T3-N7-N10,T3-N6-N9,T3-N5-N8');
+FourBar     = SplitSides.AppendRules('T3-N7-N10,T3-N6-N9,T3-N5-N8');
 FourBar.PlotGraph;
 pause(0.25)
 
 clf
-Just_A_X = SplitSides.AppendRules('T3-BR-TL,T3-BL-TR');
+Just_A_X    = SplitSides.AppendRules('T3-BR-TL,T3-BL-TR');
 Just_A_X.PlotGraph;
 pause(0.25)
 
-% %%
-% 
-tic
-Tester = FourBar.AppendRules('T3-BR-TL,T3-BL-TR');
-toc
+Tester      = FourBar.AppendRules('T3-BR-TL,T3-BL-TR');
 clf
 Tester.PlotGraph;
 pause(0.25)
 
-% Tester = FourBar.AppendRules('T3-BR-TL,T3-BL-TR');
+%%
+clc
+PossibleActions_Init = InitLayout.ListPossibleActions
+PossibleActions_FourBar = FourBar.ListPossibleActions
 
 %% Output format for Hypermesh.
 
@@ -48,7 +48,6 @@ Params = ToTest.Graph2Param;
 PanelLength     = 60.0;
 PanelHeight     = 20.0;
 StiffHeight     = 1.5;
-Symmetry        = [1 0];
 
 % Material Properties
 Matname         = 'Alum_7075';
