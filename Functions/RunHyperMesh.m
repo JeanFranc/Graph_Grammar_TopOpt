@@ -9,7 +9,7 @@ mkdir(folderName)
 % Create the new parametric files in the new folder.
 CreateParam(Names, Values,folderName)
 
-TCL_Script = "C:\Users\JfGam\Dropbox\Documents\02 Polytechnique\01 - Doctorat\21 Code\Hypermesh-TCL\MultiStep_Optimization\ThreeStepTopo\Main.tcl";
+TCL_Script = "TCL\Main.tcl";
 
 % Run Optistruct with the updated variable vector, and check if outputs. 
 if echo

@@ -1,0 +1,5 @@
+Starting Debug File 
+
+C:/Users/JfGam/Dropbox/Documents/02 Polytechnique/01 - Doctorat/21 Code/Hypermesh-TCL/MultiStep_Optimization/ThreeStepTopo/DefaultParam.par
+2.0027990 6.25 10.4601185 14.6764166
+Closing Debug File

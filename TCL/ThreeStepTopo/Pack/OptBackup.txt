@@ -1,0 +1,59 @@
+		# *createmark props 1 all
+		# set allProps [hm_getmark props 1]
+	
+		# foreach prop $allProps {
+		
+			# *createmark elems 1 "by prop" $prop
+			
+			# if {[llength [hm_getmark elems 1]] > 0} {
+			
+				# set name_1 Disp_$prop
+				# set id_1   [expr $prop + 1000]				
+				
+				# eval *createmark nodes 1 "by prop" $prop
+				# set nodelist [hm_getmark nodes 1]
+				# set att "nodes $nodelist"
+				# eval *createentity optiresponses name=$name_1 id=$id_1 response=7 attribute_a=7 
+				# eval *setvalue optiresponses id=$id_1 attribute1_list={$att}
+
+				# set name_12 Rot_$prop
+				# set id_12   [expr $prop + 2000]
+				# eval *createmark nodes 1 "by prop" $prop
+				# set nodes [hm_getmark nodes 1]
+				# set att "nodes $nodelist"
+				# eval *createentity optiresponses name=$name_12 id=$id_12 response=7 attribute_a=8
+				# eval *setvalue optiresponses id=$id_12 attribute1_list={$att}
+
+				# set name_13 AD_$prop
+				# set id_13   [expr $prop + 3000]	
+				# eval *createentity optiresponses name=$name_13 id=$id_13 response=35 attribute_b_selection_optifunction=8 dresp1vrid=$id_1
+				# eval *setvalue optiresponses id=$id_13 ROW=0 STATUS=2 drespvopttable= {ALL}
+
+				# set name_14 AR_$prop
+				# set id_14   [expr $prop + 4000]	
+				# eval *createentity optiresponses name=$name_14 id=$id_14 response=35 attribute_b_selection_optifunction=8 dresp1vrid=$id_12
+				# eval *setvalue optiresponses id=$id_14 ROW=0 STATUS=2 drespvopttable= {ALL}
+
+				# set name_2 Stress_$prop
+				# set id_2   [expr $prop + 8000]				
+				# set att "props $prop"
+				# eval *createentity optiresponses name=$name_2 id=$id_2 response=9  attribute1_list={$att} responsegroup2="both surfaces"
+				
+				# set name_3 SA_$prop
+				# set id_3 [expr $prop + 9000]	
+				# eval *createentity optiresponses name=$name_3 id=$id_3 response=35 attribute_b_selection_optifunction=8 dresp1vrid=$id_2
+				# eval *setvalue optiresponses id=$id_3 ROW=0 STATUS=2 drespvopttable= {ALL}
+				
+				# *createarray 1 1
+				# eval *opticonstraintcreate $name_13 $id_13 1 -1e+20 1E-12 1 1				
+				# *createarray 1 1
+				# eval *opticonstraintcreate $name_14 $id_14 1 -1e+20 1E-12 1 1
+				
+				#*createarray 1 1
+				#eval *opticonstraintcreate $name_3 $id_3   1 -1e+20 40000 1 1
+				
+			# }
+			
+		# }
+	
+	# }

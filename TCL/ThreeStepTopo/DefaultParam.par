@@ -1,0 +1,38 @@
+#PARAM1
+
+::Geometry::PanelLength 20.0
+::Geometry::PanelHeight 20.0
+
+::Geometry::NumberOfRibs 1
+
+::Geometry::XBeg		"0 0.4"
+::Geometry::YBeg		"0.25 0.6"
+::Geometry::XEnd		"1 1"
+::Geometry::YEnd 		"0.75 0"
+
+::Geometry::StiffHeight 	1.50000000
+
+::Material::Matname		Alum_7075
+::Material::young 		10700000
+::Material::poisson		0.33
+::Material::rho			0.1
+::Material::Fcy 		68000
+
+::Mesh::meshSize 		0.5
+
+# ::BCs::SideConditions, choices : Infinite, SimplySupported, Clamped, None. 
+::BCs::SideConditions 	SimplySupported
+
+# ::BCs::LoadType, choices : AxialCompression, TransverseCompression, PureShear, Pressure.
+::BCs::LoadType 		AxialCompression
+::BCs::Load 			120120
+#::BCs::Load 		10
+
+
+# Set the Analysis required for your needs. 
+
+::General::Buckling 	0
+::General::Stress 		0 
+
+::General::Sizing 		0
+::General::Complexity 	1 
