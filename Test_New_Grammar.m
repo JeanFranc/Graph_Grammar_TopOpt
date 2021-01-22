@@ -68,7 +68,7 @@ Load            = 120120;
 NumberOfRibs    = 2;
 SideConditions  = "SimplySupported";
 
-% Analysis, Sizing, Sensibilities Properties.
+% Analysis, Sizing, Sensibilities Tokens. Not all combinations currently work.
 G_Buckling        = 0;
 G_Stress          = 0;
 G_Sizing          = 0;
