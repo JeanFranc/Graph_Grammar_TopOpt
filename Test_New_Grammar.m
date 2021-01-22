@@ -18,21 +18,24 @@ SplitSides = InitLayout.AppendRules('T1-02-03,T1-03-03');
 SplitSides.PlotGraph;
 pause(0.25)
 
-% clf
-% FourBar    = SplitSides.AppendRules('T3-N7-N10,T3-N6-N9,T3-N5-N8');
-% FourBar.PlotGraph;
-% pause(0.25)
-% 
+clf
+FourBar    = SplitSides.AppendRules('T3-N7-N10,T3-N6-N9,T3-N5-N8');
+FourBar.PlotGraph;
+pause(0.25)
+
 clf
 Just_A_X = SplitSides.AppendRules('T3-BR-TL,T3-BL-TR');
 Just_A_X.PlotGraph;
 pause(0.25)
 
-clf 
-Tester = Just_A_X.AppendRules('T4-005');
+%%
+
+Tester = FourBar.AppendRules('T3-BR-TL');
 clf
 Tester.PlotGraph;
 pause(0.25)
+
+% Tester = FourBar.AppendRules('T3-BR-TL,T3-BL-TR');
 
 %% Output format for Hypermesh.
 
@@ -126,14 +129,14 @@ Values = {  PanelLength,    ...
 
 %% Run Hypermesh.
 
-Echo = 0;
-tic
-[Responses,Labels, Variables, Sensibilities] = RunHyperMesh(Names, Values, folderName,Echo);
-toc
-
-Sens = table2array(Sensibilities);
-Sens = Sens(:,3:end);
-
-figure(190)
-clf
-imshow(Sens,[],'InitialMagnification',4000);
+% Echo = 0;
+% tic
+% [Responses,Labels, Variables, Sensibilities] = RunHyperMesh(Names, Values, folderName,Echo);
+% toc
+% 
+% Sens = table2array(Sensibilities);
+% Sens = Sens(:,3:end);
+% 
+% figure(190)
+% clf
+% imshow(Sens,[],'InitialMagnification',4000);

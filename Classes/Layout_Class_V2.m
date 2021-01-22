@@ -1,46 +1,52 @@
 classdef Layout_Class_V2
     
     properties
+        
         Code            = '';
         EdgeIt          = 5;
         NodeIt          = 5;
+        
+        maxSplit        = 5;
+        maxNodes        = 15;
+        maxEdges        = 15;
+        
+        maxEdgePerNode  = 6;
+        minEdgeLength   = 0; 
+        
     end
     
     properties(SetAccess=private)
         Graph
     end
     
-    % Rules:
+    % Current Rules:
     
     % T1: Split Edge XXX, N Times - T1-XXX-NN
     % T2: Delete Node XXX - T2-XXX                   
     % T3: Add Edge to Nodes XXX and YYY - T3-XXX-YYY
-    % T4: Remove Edge XXX - T4-XXX                  [Not Implemented]
+    % T4: Remove Edge XXX - T4-XXX                  
     % T5: Add Mirror X-Y - T5-X-Y                   [Not Implemented]
     
     methods
         
         function obj = Layout_Class_V2()
             
-            % 0) Create the base graph.
-            
-            Names = ['BL';'BR';'TR';'TL'];
-            
             InitNodes = [   0, 0;... % 1-BottomLeft
-                1, 0;... % 2-BottomRight
-                1, 1;... % 3-TopRight
-                0, 1];   % 4-TopLeft
+                            1, 0;... % 2-BottomRight
+                            1, 1;... % 3-TopRight
+                            0, 1];   % 4-TopLeft
             
             Adj = [ 0 1 0 1;...
-                1 0 1 0;...
-                0 1 0 1;...
-                1 0 1 0];
+                    1 0 1 0;...
+                    0 1 0 1;...
+                    1 0 1 0];
             
             NodeTable = array2table(InitNodes,'VariableNames',{'X','Y'});
             InitGraph = graph(Adj, NodeTable);
             
             InitGraph.Nodes.Name = {'BL'; 'BR'; 'TR'; 'TL'};
             InitGraph.Edges.Name = [1; 2; 3; 4];
+            InitGraph.Edges.Length = {1.0;1.0;1.0;1.0};
             
             obj.Graph           = InitGraph;
             
@@ -123,6 +129,36 @@ classdef Layout_Class_V2
             
         end
         
+        function [Actions] = ListPossibleActions(obj)
+            
+            ThisGraph = obj.Graph; 
+            Actions   = cell(4,2);
+
+            % Measure the possibilities for T1: SplitEdges.
+            if ~isempty(ThisGraph.Edges.Name) && length(ThisGraph.Edges.Name) < obj.maxNodes
+                Actions{1,1} = true;
+                Actions{1,2} = length(ThisGraph.Edges.Name)*obj.maxSplit;
+            else
+                Actions{1,1} = false;
+            end 
+
+            % Measure the possibilities for T2: DeleteNode.
+            if length(ThisGraph.Nodes.Name) > 4
+                Actions{2,1} = true;
+                Actions{2,2} = length(ThisGraph.Nodes.Name) - 4; % Minus four to remove the corners, which should always be there. 
+            else
+                Actions{2,1} = false;
+            end 
+            
+            % Measure the possibilities for T3: AddEdge.
+            if length(ThisGraph.Edges.Name) < obj.maxEdges
+                
+            else
+                Actions{3,1} = false;
+            end 
+            
+        end
+        
     end
     
     methods(Access=private)
@@ -166,9 +202,11 @@ classdef Layout_Class_V2
                 
                 % Create the new Edges.
                 for i = 1:length(Names)-1
-                    newEdge = table([Names(i), Names(i+1)],1,obj.EdgeIt,'VariableNames',{'EndNodes','Weight','Name'});
-                    obj.EdgeIt = obj.EdgeIt + 1;
-                    ThisGraph = ThisGraph.addedge(newEdge);
+                    EdgeLength      = {sqrt((XX(i) - XX(i+1))^2 + (YY(i) - YY(i+1))^2)};
+                    EndNodes        = {char(Names(i)), char(Names(i+1))};
+                    newEdge         = table(EndNodes,1,obj.EdgeIt,EdgeLength,'VariableNames',{'EndNodes','Weight','Name','Length'});
+                    obj.EdgeIt      = obj.EdgeIt + 1;
+                    ThisGraph       = ThisGraph.addedge(newEdge);
                 end
                 
                 % Delete the old Edge. 
@@ -219,7 +257,6 @@ classdef Layout_Class_V2
             end
             
             % Find Intersections of each lines.
-            
             InterPoints = [];
             
             for i = 1:size(ALL_LINES,1)
@@ -283,7 +320,16 @@ classdef Layout_Class_V2
                 % Create and append the new Edges.
                 EN = EN(:);
                 for j = 1:length(EN)
-                    newEdge = table({EN{j}, newName{1}},1,obj.EdgeIt,'VariableNames',{'EndNodes','Weight','Name'});
+                    Node1_ID = ThisGraph.findnode(EN{j});
+                    Node2_ID = ThisGraph.findnode(newName{1});
+                    
+                    Pos1 = [ThisGraph.Nodes.X(Node1_ID),ThisGraph.Nodes.Y(Node1_ID)];
+                    Pos2 = [ThisGraph.Nodes.X(Node2_ID),ThisGraph.Nodes.Y(Node2_ID)];
+
+                    % Create the new edge between the nodes.
+                    EdgeLength  = {norm(Pos1-Pos2)};
+                    
+                    newEdge = table({EN{j}, newName{1}},1,obj.EdgeIt,EdgeLength,'VariableNames',{'EndNodes','Weight','Name','Length'});
                     obj.EdgeIt = obj.EdgeIt + 1;
                     ThisGraph = ThisGraph.addedge(newEdge);
                 end
@@ -307,11 +353,20 @@ classdef Layout_Class_V2
             
             if ischar(Node1) && ischar(Node2)
                 
+                ThisGraph = obj.Graph;
+                
                 EdgeNum = obj.EdgeIt;
                 obj.EdgeIt = obj.EdgeIt + 1;
                 
+                Node1_ID  = ThisGraph.findnode(Node1);
+                Node2_ID  = ThisGraph.findnode(Node2);
+                
+               	Pos1 = [ThisGraph.Nodes.X(Node1_ID),ThisGraph.Nodes.Y(Node1_ID)];
+                Pos2 = [ThisGraph.Nodes.X(Node2_ID),ThisGraph.Nodes.Y(Node2_ID)];
+                
                 % Create the new edge between the nodes.
-                newEdge = table({Node1 Node2},1,EdgeNum,'VariableNames',{'EndNodes','Weight','Name'});
+                EdgeLength  = {norm(Pos1-Pos2)};
+                newEdge = table({Node1 Node2},1,EdgeNum, EdgeLength,'VariableNames',{'EndNodes','Weight','Name','Length'});
                 obj.Graph = obj.Graph.addedge(newEdge);
                 
                 % Check for crossings.
