@@ -1,3 +1,4 @@
+
 classdef Layout_Class_V2
     
     properties
@@ -6,9 +7,9 @@ classdef Layout_Class_V2
         EdgeIt          = 5;
         NodeIt          = 5;
         
-        maxSplit        = 5;
-        maxNodes        = 15;
-        maxEdges        = 15;
+        maxSplit        = 1;
+        maxNodes        = 20;
+        maxEdges        = 20;
         
         maxEdgePerNode  = 6;
         minEdgeLength   = 0.2;
@@ -122,21 +123,28 @@ classdef Layout_Class_V2
             end
             
             if isempty(obj.Code)
-                obj.Code = InputString;
+                obj.Code = InputString{1};
             else
-                obj.Code = [obj.Code ',' InputString];
+                obj.Code = [obj.Code ',' InputString{1}];
             end
             
         end
         
-        function [Actions] = ListPossibleActions(obj)
+        function [ActionBool, ActionList] = ListPossibleActions(obj)
             
             ThisGraph = obj.Graph;
-            Actions   = cell(4,2);
+            ActionBool   = zeros(4,1);
+            ActionList   = cell(4,1);
+            
+            LengthOfEdges = cell2mat(ThisGraph.Edges.Length);
+            
+            if isempty(LengthOfEdges)
+                LengthOfEdges = 1;
+            end
             
             % Measure the possibilities for T1: SplitEdges.
-            if ~isempty(ThisGraph.Edges.Name) && length(ThisGraph.Edges.Name) < obj.maxNodes
-                Actions{1,1} = true;
+            if ~isempty(ThisGraph.Edges.Name) && length(ThisGraph.Edges.Name) < obj.maxNodes && min(LengthOfEdges) >= obj.minEdgeLength
+                ActionBool(1) = true;
                 Temp = cell(height(ThisGraph.Edges)*obj.maxSplit,1);
                 it = 1;
                 for i = 1:height(ThisGraph.Edges)
@@ -146,16 +154,16 @@ classdef Layout_Class_V2
                         it = it + 1;
                     end
                 end
-                Actions{1,2} = Temp;
+                ActionList{1} = Temp;
             else
-                Actions{1,1} = false;
-                Actions{1,2} = 0;
+                ActionBool(1) = false;
+                ActionList{1} = 0;
             end
             
             % Measure the possibilities for T2: DeleteNode.
             if height(ThisGraph.Nodes) > 4
                 
-                Actions{2,1} = true;
+                ActionBool(2) = true;
                 Temp = cell(height(ThisGraph.Nodes) - 4,1);
                 it = 1;
                 for i = 1:length(ThisGraph.Nodes.Name)
@@ -167,21 +175,22 @@ classdef Layout_Class_V2
                     end
                 end
                 
-                Actions{2,2} = Temp;
+                ActionList{2} = Temp;
+                
             else
-                Actions{2,1} = false;
-                Actions{2,2} = 0;
+                ActionBool(2)   = false;
+                ActionList{2}      = 0;
             end
 
             % Measure the possibilities for T3: AddEdge.
-            LengthOfEdges = cell2mat(ThisGraph.Edges.Length);
-            if length(ThisGraph.Edges.Name) < obj.maxEdges && max(LengthOfEdges) > obj.minEdgeLength;
-                Actions{3,1} = true;
+            
+            if length(ThisGraph.Edges.Name) < obj.maxEdges && min(LengthOfEdges) >= obj.minEdgeLength
+                ActionBool(3) = true;
                 
                 Combinations = string(nchoosek(ThisGraph.Nodes.Name,2));
                 Existing     = string(ThisGraph.Edges.EndNodes);
                 
-                ToRemove = [];
+                ToRemove = zeros(size(Combinations,1),1);
                 for i = 1:size(Combinations,1)
                     %Check if anylines contains "new" combinations.
                     test  = contains(Existing, Combinations(i,:));
@@ -200,15 +209,15 @@ classdef Layout_Class_V2
                     Temp{i} = str;
                 end
                 
-                Actions{3,2} = Temp;
+                ActionList{3} = Temp;
                 
             else
-                Actions{3,1} = false;
-                Actions{3,2} = 0;
+                ActionBool(3) = false;
+                ActionList{3} = 0;
             end
             
             if height(ThisGraph.Edges) > 0
-                Actions{4,1} = true;
+                ActionBool(4) = true;
                 Temp = cell(height(ThisGraph.Edges),1);
                 for i = 1:length(ThisGraph.Edges.Name)
                     name = ThisGraph.Edges.Name(i);
@@ -216,10 +225,10 @@ classdef Layout_Class_V2
                     Temp{i} = str;
                 end
                 
-                Actions{4,2} = Temp;
+                ActionList{4} = Temp;
             else
-                Actions{4,1} = false; 
-                Actions{4,2} = 0;
+                ActionBool(4) = false; 
+                ActionList{4} = 0;
             end
             
         end
@@ -323,6 +332,7 @@ classdef Layout_Class_V2
             
             % Find Intersections of each lines.
             InterPoints = [];
+            NewCrosses  = [];
             
             for i = 1:size(ALL_LINES,1)
                 
@@ -347,7 +357,9 @@ classdef Layout_Class_V2
             end
             
             % Check for new crossings.
-            NewCrosses  = InterPoints(~ismember(InterPoints(:,3:4),Points,'rows'),:);
+            if ~isempty(InterPoints)
+                NewCrosses  = InterPoints(~ismember(InterPoints(:,3:4),Points,'rows'),:);
+            end
             
             if ~isempty(NewCrosses)
                 
@@ -484,12 +496,7 @@ classdef Layout_Class_V2
             end
             
         end
-        
-        
-        
-        
+
     end
     
-    
 end
-
