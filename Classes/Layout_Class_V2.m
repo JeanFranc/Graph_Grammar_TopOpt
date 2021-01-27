@@ -123,7 +123,7 @@ classdef Layout_Class_V2
             end
             
             if isempty(obj.Code)
-                obj.Code = InputString{1};
+                obj.Code = InputString;
             else
                 obj.Code = [obj.Code ',' InputString{1}];
             end

@@ -12,7 +12,7 @@ addpath('TCL')
 % Structural Parameters
 
 % Search Parameters
-SubSteps    = 8*2;
+SubSteps    = 16;
 MaxLayouts  = 800;
 
 % Initialize search
@@ -45,26 +45,37 @@ while length(AllLayouts) <= MaxLayouts
         % Get the list of possible type of actions, and its given list. 
         [Act_Bool, Act_List] = ThisLayout.ListPossibleActions;
         
+        Act_Bool([2,4]) = 0;
+        
         % Choose one random rule, amongst available ones. 
         PossibleMainActions = find(Act_Bool);
-        Rand = randperm(length(PossibleMainActions),1);
         
-        % Get list of available moves, from the chosen rule.
-        Possible_List = Act_List{PossibleMainActions(Rand)};
-        
-        Action = Possible_List(randi(length(Possible_List)));
-        
-        NewLayouts{i} = ThisLayout.AppendRules(Action);
-   
+        % Temporarily, I disable removing, to make the search
+        % unidirectional.
+       
+        if ~isempty(PossibleMainActions)
+            
+            Rand = randperm(length(PossibleMainActions),1);
+
+            % Get list of available moves, from the chosen rule.
+            Possible_List = Act_List{PossibleMainActions(Rand)};
+
+            Action = Possible_List(randi(length(Possible_List)));
+
+            NewLayouts{i} = ThisLayout.AppendRules(Action);
+            
+        end
     end
 
-    % Display New Results
-    clf
-    for i = 1 : length(NewLayouts)
-        subplot(4,4,i)
-        NewLayouts{i}.PlotGraph;
-    end
-    pause(0.25)
+    NewLayouts = NewLayouts(~cellfun('isempty',NewLayouts));
+    
+%     % Display New Results
+%     clf
+%     for i = 1 : length(NewLayouts)
+%         subplot(4,4,i)
+%         NewLayouts{i}.PlotGraph;
+%     end
+%     pause(0.25)
     
     % Extract from parallel runs;
     AllLayouts = [AllLayouts,NewLayouts];

@@ -1,5 +1,9 @@
 function [responses, resp_labels, variables, sensibilities] = RunHyperMesh(Names,Values, folderName, echo)
 
+if isstring(folderName)
+    folderName = char(folderName);
+end
+
 % Make sure that the targeted folder is empty. 
 try
     rmdir(folderName,'s')
@@ -9,7 +13,7 @@ mkdir(folderName)
 % Create the new parametric files in the new folder.
 CreateParam(Names, Values,folderName)
 
-TCL_Script = "TCL\Main.tcl";
+TCL_Script = [pwd,'\TCL\Main.tcl'];
 
 % Run Optistruct with the updated variable vector, and check if outputs. 
 if echo
