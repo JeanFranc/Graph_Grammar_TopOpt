@@ -56,16 +56,18 @@
 
 	proc RibBCs {} {
 	
-		*currentcollector loadcols "SPC"
-		
-		set Ls [expr $::Geometry::PanelLength /$::Geometry::NumberOfRibs]
-		
-		for {set i 1} {$i <= $::Geometry::NumberOfRibs} {incr i} {
-				set cut [expr $Ls*$i - $Ls / 2]
-				eval *createmark nodes 1 \"by box\"  $cut 0 0 $cut $::Geometry::PanelHeight 0 0 inside 0 1 0.001
-				*loadcreateonentity_curve nodes 1 3 1 -999999 -999999 0 -999999 -999999 -999999 0 0 0 0 0
-		}		
+		if {$::Geometry::NumberOfRibs > 0} {
 	
+			*currentcollector loadcols "SPC"
+			
+			set Ls [expr $::Geometry::PanelLength /$::Geometry::NumberOfRibs]
+			
+			for {set i 1} {$i <= $::Geometry::NumberOfRibs} {incr i} {
+					set cut [expr $Ls*$i - $Ls / 2]
+					eval *createmark nodes 1 \"by box\"  $cut 0 0 $cut $::Geometry::PanelHeight 0 0 inside 0 1 0.001
+					*loadcreateonentity_curve nodes 1 3 1 -999999 -999999 0 -999999 -999999 -999999 0 0 0 0 0
+			}		
+		}
 	}
 
 	proc InfiniteBCs {} {

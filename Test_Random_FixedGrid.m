@@ -17,7 +17,7 @@ MaxLayouts  = 800;
 
 % Initialize search
 AllLayouts        = {};
-AllLayouts{1}     = Layout_Fixed_Grid(3,3);
+AllLayouts{1}     = Layout_Fixed_Grid(4,4);
 
 AllCodes = {};
 AllCodes{1} = AllLayouts{1}.getCode;
@@ -44,9 +44,12 @@ while length(AllLayouts) <= MaxLayouts
     Queue = AllLayouts(QueueID);
     NewLayouts = cell(1,length(Queue));
     NewCodes   = cell(1,length(Queue));
+    Sensi      = cell(1,length(Queue));
+    Compliance = zeros(1,length(Queue));
+    Complexity = zeros(1,length(Queue));
     
-%     parfor (i = 1:length(Queue),16)
-    for i = 1:length(Queue)
+    parfor (i = 1:length(Queue),16)
+%     for i = 1:length(Queue)
         
         ThisLayout = Queue{i};
         
@@ -58,7 +61,7 @@ while length(AllLayouts) <= MaxLayouts
         N1 = Act_List{Rand,1};
         N2 = Act_List{Rand,2};
         
-        NewLayouts{i} = ThisLayout.CreateStiffener(N1,N2);
+        NewLayouts{i}     = ThisLayout.CreateStiffener(N1,N2);
         NewCodes{i}       = NewLayouts{i}.getCode;
         
         isNew = ~any(ismember(AllCodes,NewCodes{i}));
@@ -67,25 +70,46 @@ while length(AllLayouts) <= MaxLayouts
             NewLayouts{i} = {};
             NewCodes{i}   = {};          
         else
-            % Performance analysis !!
+            filename = sprintf("D:\\Runs\\Evaluation_%i",i);
             
-            
+            try
+                [Compliance(i), Complexity(i), Sensi{i}] = NewLayouts{i}.EvaluatePerformance(filename);
+            catch Exception
+                 fprintf('Fuck up in evaluation %i. \n',i)
+                 disp(Exception)
+            end
         end
 
     end
 
     % Clean bugged out layouts. 
-    NewLayouts = NewLayouts(~cellfun('isempty',NewLayouts));
-    NewCodes   = NewCodes(~cellfun('isempty',NewCodes));
+
     
     % Display New Results
     figure(2)
     clf
     for i = 1 : length(NewLayouts)
-        subplot(4,4,i)
-        NewLayouts{i}.PlotGraph(0,0);
+        if ~isempty(NewLayouts{i})
+            subplot(4,4,i)
+            NewLayouts{i}.PlotGraph(0,0);
+        end
     end
+    
+    figure(3)
+    clf
+    for i = 1 : length(Sensi)
+        if ~isempty(Sensi{i})
+            subplot(4,4,i)
+            imshow(Sensi{i},[],'InitialMagnification',4000);
+            xlabel(num2str(Compliance(i)))
+        end
+    end   
     pause(0.05)
+    
+    beep
+    
+    NewLayouts      = NewLayouts(~cellfun('isempty',NewLayouts));
+    NewCodes        = NewCodes(~cellfun('isempty',NewCodes));
     
     % Extract from parallel runs, and ensure unique new solutions.
     [ID1, ID2, ID3] = unique(NewCodes);
@@ -95,7 +119,6 @@ while length(AllLayouts) <= MaxLayouts
     NewLayouts      = NewLayouts(ID2);
     AllCodes        = [AllCodes,NewCodes];
     AllLayouts      = [AllLayouts,NewLayouts];
-
 
 %     msg = sprintf('Generating New Layouts... (%1.2f seconds elapsed)',toc);
 %     waitbar(length(AllLayouts) / MaxLayouts, BAR,msg)

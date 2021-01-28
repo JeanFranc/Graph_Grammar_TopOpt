@@ -1,26 +1,17 @@
 
 classdef Layout_Fixed_Grid
     
-    properties
-        
+    properties(SetAccess=private)
         EdgeIt          = 1;
         NodeIt          = 1;
-        
         n               = 5;
         m               = 5;
-        
+        Graph;
         PartialRadius;
-        
     end
     
-    properties(SetAccess=private)
-        Graph
-    end
-    
-    % Current Rules:
-    
+    % Current Rules:    
     % Create Stiffeners - 'NX', 'NY'
-    
     
     methods
         
@@ -41,8 +32,22 @@ classdef Layout_Fixed_Grid
             obj.Graph = graph([]);
             
             for i = 1:length(GridPos)
-                if GridPos(i,1) == 0 || GridPos(i,2) == 0 || GridPos(i,1) == 1 || GridPos(i,2) == 1
-                    State = "Active";
+                if (GridPos(i,1) == 0 && GridPos(i,2) == 0) 
+                    State = "Side_1_2";
+                elseif GridPos(i,1) == 1 && GridPos(i,2) == 0
+                    State = "Side_2_3";
+                elseif GridPos(i,1) == 1 && GridPos(i,2) == 1
+                    State = "Side_3_4";
+                elseif GridPos(i,1) == 0 && GridPos(i,2) == 1
+                    State = "Side_4_1";
+                elseif GridPos(i,1) == 0 
+                    State = "Side_1";
+                elseif GridPos(i,2) == 0
+                    State = "Side_2";
+                elseif GridPos(i,1) == 1
+                    State = "Side_3";
+                elseif GridPos(i,2) == 1
+                    State = "Side_4";
                 else
                     State = "Inactive";
                 end
@@ -66,11 +71,13 @@ classdef Layout_Fixed_Grid
             ActiveBool      = strcmp(State, 'Active'); 
             InactiveBool    = strcmp(State, 'Inactive'); 
             OffSetBool      = strcmp(State, 'A-Offset'); 
+            SidesBool       = contains(State,'Side');
             
             % Place all the grid, depending on state. 
             if DispGrid
-                scatter(Pos(ActiveBool,1), Pos(ActiveBool,2),'r')
+                scatter(Pos(SidesBool,1), Pos(SidesBool,2),'k')
                 hold all
+                scatter(Pos(ActiveBool,1), Pos(ActiveBool,2),'r')
                 scatter(Pos(InactiveBool,1), Pos(InactiveBool,2),'b')
                 scatter(Pos(OffSetBool,1), Pos(OffSetBool,2),'g')
                 % Label each points with their name.
@@ -206,7 +213,7 @@ classdef Layout_Fixed_Grid
             
             for i = 1:length(allPos)
 
-                if ~strcmp(Names{i},N1) && ~strcmp(Names{i},N2) && ~strcmp(States{i},'Active')
+                if ~strcmp(Names{i},N1) && ~strcmp(Names{i},N2) && ~strcmp(States{i},'Active') && ~contains(States{i},'Side')
                 
                     Dist = newBase * (allPos(i,:) - Center)';
 
@@ -223,12 +230,8 @@ classdef Layout_Fixed_Grid
                         elseif strcmp(States{i},'A-Offset')
                             OffSet(end+1,:) = [0,0];
                             NewState{end+1} = 'Active';
-                        else
-                            error('MONEY OVER HERE!')
                         end
                         
-                        
-
                     end
                 
                 end
@@ -268,10 +271,16 @@ classdef Layout_Fixed_Grid
                     
                     Edges = [{N1},Nodes,{N2}];
                     
-                    if strcmp(N1, 'A-Offset')
-                        obj.Nodes.OffSetX(N1_ID) = 0;
-                        obj.Nodes.OffSetY(N1_ID) = 0;
-                        obj.Nodes.State(N1_ID)   = 'Active';
+                    if strcmp(State1, 'A-Offset')
+                        obj.Graph.Nodes.OffSetX(N1_ID) = 0;
+                        obj.Graph.Nodes.OffSetY(N1_ID) = 0;
+                        obj.Graph.Nodes.State(N1_ID)   = 'Active';
+                    end
+                    
+                    if strcmp(State2, 'A-Offset')
+                        obj.Graph.Nodes.OffSetX(N2_ID) = 0;
+                        obj.Graph.Nodes.OffSetY(N2_ID) = 0;
+                        obj.Graph.Nodes.State(N2_ID)   = 'Active';
                     end
                     
                     for i = 1:length(Edges)-1
@@ -296,8 +305,11 @@ classdef Layout_Fixed_Grid
             
             States      = obj.Graph.Nodes.State;
             Names       = obj.Graph.Nodes.Name;
+            
+            % List possible connections just for the not-inactive nodes.
             NotInactive = find(~strcmp(States,'Inactive')); 
             Actions = {};
+            
             
             for i = 1 : length(NotInactive)
                 
@@ -316,8 +328,33 @@ classdef Layout_Fixed_Grid
                     Name1 = Names{NotInactive(i)};
                     Name2 = Names{NotInactive(j)};
                     
-                    if ~strcmp(Name1,Name2) && any(~strcmp(Name2,ConnNodes))
-                        Actions(end+1,:) = {Name1, Name2};
+                    % Added a check to ignore the connections of nodes on
+                    % the same side. 
+
+                    
+                    if ~strcmp(Name1,Name2)
+                    
+                        State1 = States{NotInactive(i)};
+                        State2 = States{NotInactive(j)};
+                        
+                        if contains(State1,'Side') && contains(State2,'Side')
+
+                            Side1 = split(State1,'_');
+                            Side2 = split(State2,'_');
+
+                            Side1 = Side1(2:end);
+                            Side2 = Side2(2:end);
+
+                            if ~any(ismember(Side1,Side2))
+                                Actions(end+1,:) = {Name1, Name2};
+                            end
+
+                        elseif any(~strcmp(Name2,ConnNodes))
+
+                            Actions(end+1,:) = {Name1, Name2};
+
+                        end
+                        
                     end
                     
                 end
@@ -337,27 +374,41 @@ classdef Layout_Fixed_Grid
              
         end
         
-        function [Compliance, Complexity] = EvaluatePerformance(obj, folder)
+        function [Compliance, Complexity, Sensi] = EvaluatePerformance(obj, folder, Symmetry)
             
             EndNodes = obj.Graph.Edges.EndNodes;
             Pos       = table2array([obj.Graph.Nodes(:,'X'),obj.Graph.Nodes(:,'Y')]);
+            OffSet    = table2array([obj.Graph.Nodes(:,'OffSetX'),obj.Graph.Nodes(:,'OffSetY')]);
             
-            XBeg = [];YBeg = [];XEnd = []; YEnd = [];
+            XBeg = zeros(1,size(EndNodes,1));
+            YBeg = zeros(1,size(EndNodes,1));
+            XEnd = zeros(1,size(EndNodes,1));
+            YEnd = zeros(1,size(EndNodes,1));
             
+            if length(Symmetry) == 2
+            
+                if Symmetry(1)
+                    
+                end
+
+                if Symmetry(2)
+
+                end
+            
+            end
+                
             for i = 1:size(EndNodes,1)
                 
                 Point1 = obj.Graph.findnode(EndNodes(i,1));
                 Point2 = obj.Graph.findnode(EndNodes(i,2));
                 
-                XBeg(end+1) = Pos(Point1,1);
-                YBeg(end+1) = Pos(Point1,2);
-                XEnd(end+1) = Pos(Point2,1);
-                YEnd(end+1) = Pos(Point2,2);
+                XBeg(i) = Pos(Point1,1) + OffSet(Point1,1);
+                YBeg(i) = Pos(Point1,2) + OffSet(Point1,2);
+                XEnd(i) = Pos(Point2,1) + OffSet(Point2,1);
+                YEnd(i) = Pos(Point2,2) + OffSet(Point2,2);
                 
             end
-            
-%             Params = [XBeg;YBeg;XEnd;YEnd];
-            
+
             Names  = {  '::Geometry::PanelLength',  ...
                         '::Geometry::PanelHeight',  ...
                         '::Geometry::NumberOfRibs', ...
@@ -378,11 +429,12 @@ classdef Layout_Fixed_Grid
                         '::General::Buckling',      ...
                         '::General::Stress',        ...
                         '::General::Sizing', 		...
-                        '::General::Complexity'     };
+                        '::General::Complexity',    ...
+                        '::Optimization::MassCons'      };
 
             Values = {  20,                     ...
                         20,                     ...
-                        1,                      ...
+                        0,                      ...
                         XBeg,                   ...
                         YBeg,                   ...
                         XEnd,                   ...
@@ -394,18 +446,17 @@ classdef Layout_Fixed_Grid
                         0.1,                    ...
                         68000,                  ...
                         0.5,                    ...
-                        120120,                 ...
-                        "AxialCompression",     ...
+                        10,                     ...
+                        "Pressure",             ...
                         "SimplySupported",      ...
                         0,                      ...
                         0,                      ...
                         1,                      ...
-                        0    };
+                        0,                      ...
+                        5.0                     };
 
-            [Responses{i}, Labels{i}, Variables{i}, Sensibilities{i}] = RunHyperMesh(Names, Values, folder,1);
+            [Compliance, Complexity, Sensi] = RunHyperMesh_CompComp(Names, Values, folder,0);
            
-            disp("DID IT WORK???")
-            
         end
         
     end

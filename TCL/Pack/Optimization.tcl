@@ -10,6 +10,7 @@
 namespace eval Optimization {
  
 	variable handleList " "
+	variable MassCons   
  
  proc setOptimizationCards {} {
 	
@@ -591,4 +592,175 @@ namespace eval Optimization {
 
 	}
  
+	proc SetComplianceMassSizing {} {
+	
+		variable MassCons
+	
+		# Add the global Mass Response
+		*createarray 6 0 0 0 0 0 0
+		*createdoublearray 6 0 0 0 0 0 0
+		*optiresponsecreate "Mass" 29 0 0 0 0 0 6 0 0 0 1 6 1 6
+		*optiresponsesetequationdata1 "Mass" 0 0 0 0 1 0
+		*optiresponsesetequationdata2 "Mass" 0 0 1 0
+		*optiresponsesetequationdata3 "Mass" 0 0 1 0
+		*optiresponsesetequationdata4 "Mass" 0 0 0 0 1 0 1 0
+		
+		# Add the global Compliance Response
+		*createarray 6 0 0 0 0 0 0
+		*createdoublearray 6 0 0 0 0 0 0
+		*optiresponsecreate "Comp" 31 0 0 0 0 0 6 0 0 0 1 6 1 6
+		*optiresponsesetequationdata1 "Comp" 0 0 0 0 1 0
+		*optiresponsesetequationdata2 "Comp" 0 0 1 0
+		*optiresponsesetequationdata3 "Comp" 0 0 1 0
+		*optiresponsesetequationdata4 "Comp" 0 0 0 0 1 0 1 0
+		
+		# Create the design variable for each sections. 
+		*createmark props 1 all
+		set allProps [hm_getmark props 1]
+		
+		foreach prop $allProps {
+		
+			set name [hm_getvalue property id=$prop dataname=name]
+			set subname [string range $name 0 3]
+			
+			if {$subname == "Skin"} {
+				eval *createentity designvariable name=$name id=$prop initialvalue=0.05 lowerbound=0.05 upperbound=0.5
+			} elseif {$subname == "Stif"} {
+				eval *createentity designvariable name=$name id=$prop initialvalue=0.50 lowerbound=0.05 upperbound=0.5
+			}
+			eval *createentity dvprels name=$name id=$prop property=1 propertyid={props $prop} desvarlist=$prop	
+		
+		}
+		
+		# Create the mass constraint.
+		*opticonstraintcreate "MassCons" 1 1 -1e+20 4 1 0
+	
+		# Create the compliance objective.
+		*optiobjectivecreate 2 0 1
+	
+	
+	}
+ 
+	proc UnsetSizing {} {
+		catch {
+		*createmark optiresponses 1 all
+		*deletemark optiresponses 1
+		}
+		
+		catch {
+		*createmark designvars 1 all
+		*deletemark designvars 1 
+		}
+		
+		catch {
+		*createmark opticontrols 1 "optistruct_opticontrol"
+		*deletemark opticontrols 1
+		}
+	}
+
+	proc SetSensiAnalysis {normalPath p_name} {
+		
+		# Read the sized properties from p_name.
+		set fp [open $normalPath/$p_name.hgdata]
+		set file_Data [read $fp]
+		close $fp
+		set data_per_line [split $file_Data "\n"]
+		
+		set DesVars ""
+		set Start ""
+		set i 0
+		set intValues ""
+		
+		foreach line $data_per_line {
+		
+			if ![string compare [lindex $line 0] "Design"] {
+				append DesVars " [lindex $line 3]"
+			}
+	
+			if [string is integer [lindex $line 0]] {
+				append Start " $i"
+			}
+
+			incr i
+	
+		}
+	
+		# Create the design variables with sized properties.
+		set j 0
+		for {set i [expr [lindex $Start end-1]+1]} {$i <= [lindex $Start end-1] + [llength $DesVars]} {incr i} {
+			set name [lindex $DesVars $j]
+			set value [lindex $data_per_line $i]
+			set id [lindex [split $name "_"] 1]
+			incr j
+			
+			eval *createentity designvariable name=$name id=$id initialvalue=$value lowerbound=0.05 upperbound=0.5
+			eval *createentity dvprels name=$name id=$id property=1 propertyid={props $id} desvarlist=$id
+			
+			
+		}
+	
+		# Create the global mass responses.
+		*createarray 6 0 0 0 0 0 0
+		*createdoublearray 6 0 0 0 0 0 0
+		*optiresponsecreate "Mass" 29 0 0 0 0 0 6 0 0 0 1 6 1 6
+		*optiresponsesetequationdata1 "Mass" 0 0 0 0 1 0
+		*optiresponsesetequationdata2 "Mass" 0 0 1 0
+		*optiresponsesetequationdata3 "Mass" 0 0 1 0
+		*optiresponsesetequationdata4 "Mass" 0 0 0 0 1 0 1 0
+		
+		# Create the local compliances responses. 
+		*createmark props 1 all
+		set allProps [hm_getmark props 1]
+		
+		foreach prop $allProps {
+			
+			set name "C_$prop"
+			set id $prop
+
+			set att "props $prop" 
+			eval *createentity optiresponses name=$name id=$id response=31 property_attrib_b=1 attribute1_list={$att} 
+			
+			*createentity opticonstraints name=$name id=$id 
+			set response3 "optiresponses $id"
+			*setvalue opticonstraints id=$id responseid={$response3}
+			*setvalue opticonstraints id=$id STATUS=2 upperoption=1
+			*setvalue opticonstraints id=$id STATUS=1 upperbound=1E-12
+			*setvalue opticonstraints id=$id STATUS=2 loadsteplist={loadsteps 1}			
+
+		
+		}
+		
+		# Removes the screening of constraints.
+		*createentity optidscreens 
+		*setvalue optidscreens id=1 STATUS=2 autotoggle=1
+		*setvalue optidscreens id=1 STATUS=2 autolevel=0
+		*setvalue optidscreens id=1 STATUS=2 EquaToggle=1
+		*setvalue optidscreens id=1 STATUS=2 EquaMaxc=300
+		*setvalue optidscreens id=1 STATUS=2 EquaThreshold=-0.5
+		*setvalue optidscreens id=1 STATUS=2 lamatoggle=1
+		*setvalue optidscreens id=1 STATUS=2 lamathreshold=-0.5
+		*setvalue optidscreens id=1 STATUS=2 lamamaxc=200
+		*setvalue optidscreens id=1 STATUS=2 CompToggle=1
+		*setvalue optidscreens id=1 STATUS=2 CompThreshold=-0.5
+		*setvalue optidscreens id=1 STATUS=2 CompMaxc=300
+		
+		# Create the objective
+		*optiobjectivecreate 1 0 0
+
+		# Create the sensitivity output.
+		*cardcreate "OUTPUT"
+		*startnotehistorystate {Attached attributes to card}
+		*attributeupdateint cards 1 3850 1 0 0 1
+		*attributeupdatestring cards 1 130 1 0 0 "0"
+		*createstringarray 1 "ASCSENS"
+		*attributeupdatestringarray cards 1 3851 1 2 0 1 1
+		*createstringarray 1 "ALL"
+		*attributeupdatestringarray cards 1 3854 1 2 0 1 1
+		*createstringarray 1 "FL"
+		*attributeupdatestringarray cards 1 3852 1 2 0 1 1
+		*endnotehistorystate {Attached attributes to card}
+		
+	
+	}
+
 }

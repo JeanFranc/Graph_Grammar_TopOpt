@@ -14,8 +14,17 @@ InitLayout  = Layout_Fixed_Grid(5,5);
 InitLayout.PlotGraph(1,1);
 pause(0.05)
 
-clf
 New         = InitLayout.CreateStiffener('N1','N24');
+clf
+New.PlotGraph(1,1);
+pause(0.05)
+
+[Compliance, Complexity, Sensi] = New.EvaluatePerformance("D:\Runs\Test6969");
+
+Actions = New.ListOfPossibleActions;
+
+New         = New.CreateStiffener('N5','N13');
+clf
 New.PlotGraph(1,1);
 pause(0.05)
 
@@ -33,6 +42,7 @@ clf
 New         = New.CreateStiffener('N2','N22');
 New.PlotGraph(1,1);
 pause(0.05)
+
 
 %%
 figure(2)

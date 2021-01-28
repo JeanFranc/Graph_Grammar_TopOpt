@@ -1,14 +1,19 @@
-#PARAM1
+# PARAM1
 
 ::Geometry::PanelLength 20.0
 ::Geometry::PanelHeight 20.0
 
-::Geometry::NumberOfRibs 1
+::Geometry::NumberOfRibs 0
 
-::Geometry::XBeg		"0 0.4"
-::Geometry::YBeg		"0.25 0.6"
-::Geometry::XEnd		"1 1"
-::Geometry::YEnd 		"0.75 0"
+::Geometry::XBeg 	 "0.33333     0.73333" 
+::Geometry::YBeg 	 "0         0.2" 
+::Geometry::XEnd 	 "0.73333           1" 
+::Geometry::YEnd 	 "0.2     0.33333" 
+
+#::Geometry::XBeg 	 "0        0.28        0.44        0.56        0.72 0" 
+#::Geometry::YBeg 	 "0        0.21        0.33        0.42        0.54 1" 
+#::Geometry::XEnd 	 "0.28        0.44        0.56        0.72           1 1 " 
+#::Geometry::YEnd 	 "0.21        0.33        0.42        0.54        0.75 0" 
 
 ::Geometry::StiffHeight 	1.50000000
 
@@ -24,7 +29,7 @@
 ::BCs::SideConditions 	SimplySupported
 
 # ::BCs::LoadType, choices : AxialCompression, TransverseCompression, PureShear, Pressure.
-::BCs::LoadType 		AxialCompression
+::BCs::LoadType 		Pressure
 ::BCs::Load 			120120
 #::BCs::Load            10
 
@@ -34,5 +39,7 @@
 ::General::Buckling 	0
 ::General::Stress 		0 
 
-::General::Sizing 		0
-::General::Complexity 	1 
+::General::Sizing 		1
+::General::Complexity 	0
+
+::Optimization::MassCons  6.0

@@ -47,7 +47,7 @@ if {$::General::Sizing && $::General::Complexity} {
 set ::General::debugStream $debugStream
 
 # Create the stiffened panels, in the components, and its mesh. 
-::Geometry::createGeometry_xy
+::Geometry::createGeometry_xy_Combined
 
 # Create the material cards for linear behaviour. 
 ::Material::initializeMatCard
@@ -70,10 +70,10 @@ set ::Steps::debugStream $debugStream
 set name Sensi
 
 if {$::General::Sizing || $::General::Complexity} {
-	::Optimization::setOptimizationCards
+	::Optimization::SetComplianceMassSizing
 }
 
-::Optistruct::RunOptistruct $normalPath $name 
+# #::Optistruct::RunOptistruct $normalPath $name 
 
 puts $debugStream "Closing Debug File"
 close $debugStream

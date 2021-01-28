@@ -291,7 +291,7 @@
 		set stiff_i 100	
 		# Create the blades
 		foreach {stiff ID} [array get ::Geometry::lineArray] {
-			if {[string range $stiff 0 4] == "Stiff"} {
+			if {[string range $stiff 0 3] == "Stif"} {
 				#createComponent "Stiff_$stiff_i" $stiff_i 
 				#set collName "Stiff_$stiff_i"
 				#eval *currentcollector components $collName
@@ -350,9 +350,9 @@
 
 		set stiff_i 100
 		foreach blade $newSurfs {
-			createComponent "Stiff_$stiff_i" $stiff_i
+			createComponent "Stif_$stiff_i" $stiff_i
 			eval *createmark surfaces 1 $blade
-			eval *movemark surfaces 1 "Stiff_$stiff_i" 
+			eval *movemark surfaces 1 "Stif_$stiff_i" 
 			incr stiff_i
 		}
 		
@@ -386,188 +386,360 @@
 
 	}
 	
-		proc createGeometry_xy {} {
+	proc createGeometry_xy {} {
+
+	# Creates the skin from the PanelHeight and Lenght and 4 positions vectors. 
+
+	variable PanelHeight
+	variable PanelLength
+	variable lineArray
+	variable surfaceArray
+	variable StiffHeight
+	variable NumberOfRibs
 	
-		# Creates the skin from the PanelHeight and Lenght and 4 positions vectors. 
+	variable XBeg	
+	variable YBeg		
+	variable XEnd		
+	variable YEnd 	
+
+	hm_answernext yes
+	*deletemodel 
+
+	# Create the skin component and set the colour to blue. 
+	createComponent "Skin_temp" "1"
+
+	# Creates the rectangle from the parameters. 
+	set p_BottomLeft 	"0  			0    			0"
+	set p_BottomRight 	"$PanelLength 	0    			0"
+	set p_TopLeft	 	"0  			$PanelHeight 	0"
+	set p_TopRight	 	"$PanelLength 	$PanelHeight 	0"	
+
+	# Creates the outer bounds of the rectangle
+	eval CreateLineAndAppend "$p_BottomLeft $p_BottomRight" "Outer_Bottom"
+	eval CreateLineAndAppend "$p_BottomLeft $p_TopLeft"     "Outer_Left"
+	eval CreateLineAndAppend "$p_TopLeft    $p_TopRight"    "Outer_Top"
+	eval CreateLineAndAppend "$p_TopRight   $p_BottomRight" "Outer_Right"		
+
+	# Creates the surface from the outer bounds.
+	set temp_list "$::Geometry::lineArray(Outer_Bottom) $::Geometry::lineArray(Outer_Left) $::Geometry::lineArray(Outer_Top) $::Geometry::lineArray(Outer_Right)"
+	CreateSurfaceAndAppend $temp_list "Skin_Web"
 	
-		variable PanelHeight
-		variable PanelLength
-		variable lineArray
-		variable surfaceArray
-		variable StiffHeight
-		variable NumberOfRibs
+	# Create cuts at centerlines.
+	CreateLineAndAppend 0 [expr $PanelHeight/2] 0 $PanelLength [expr $PanelHeight/2] 0 "MiddleLine"
+
+	# Create cuts at the ribs positions.
+	set Ls [expr $PanelLength/$NumberOfRibs]
+	
+	for {set i 1} {$i <= $NumberOfRibs} {incr i} {
+			set cut [expr $Ls*$i - $Ls / 2]
+			CreateLineAndAppend $cut 0 0 $cut $PanelHeight 0 "CenterLine"
+	}
+	
+	# If the number of cut is even, add a middle cut. 
+	if  [expr {($NumberOfRibs % 2) == 0}] {
+		CreateLineAndAppend [expr $PanelLength/2] 0 0 [expr $PanelLength/2] $PanelHeight 0 "CenterLine"
+	}
+
+	# Create each stiffeners
+	set i 1
+	foreach xb $XBeg xe $XEnd yb $YBeg ye $YEnd {
+		set xbPos [expr $xb * $PanelLength]
+		set xePos [expr $xe * $PanelLength]
+		set ybPos [expr $yb * $PanelHeight]
+		set yePos [expr $ye * $PanelHeight]
+	
+		CreateLineAndAppend_xy $xbPos $ybPos $xePos $yePos "Stiff_$i"
+		incr i
+	}		
+
+	# Cut the skin for each stiffeners and boundary conditions. 
+	set cutList ""
+	foreach {name ID} [array get ::Geometry::lineArray] {
+		append cutList " $ID"
+	}
+	
+	*createmark surfaces 1 all
+	eval *createmark lines 2 $cutList
+	*createvector 1 0 0 1
+	*surfacemarksplitwithlines 1 2 1 9 0
+	*normalsoff 
+	*clearmarkall
+	#*createmark lines 1 all
+	#*deletemark lines 1
+
+	# Create a surface list before creating the blades. 
+	*createmark surfs 1 all
+	set allsurf [hm_getmark surf 1]
+	set skinNumber [llength $allsurf]
 		
-		variable XBeg	
-		variable YBeg		
-		variable XEnd		
-		variable YEnd 	
-
-		hm_answernext yes
-		*deletemodel 
-
-		# Create the skin component and set the colour to blue. 
-		createComponent "Skin_temp" "1"
-
-		# Creates the rectangle from the parameters. 
-		set p_BottomLeft 	"0  			0    			0"
-		set p_BottomRight 	"$PanelLength 	0    			0"
-		set p_TopLeft	 	"0  			$PanelHeight 	0"
-		set p_TopRight	 	"$PanelLength 	$PanelHeight 	0"	
+	set stiff_i 100	
+	# Create the blades
+	foreach {stiff ID} [array get ::Geometry::lineArray] {
+		if {[string range $stiff 0 4] == "Stiff"} {
+			#createComponent "Stiff_$stiff_i" $stiff_i 
+			#set collName "Stiff_$stiff_i"
+			#eval *currentcollector components $collName
+			eval *createmark lines 1 $ID
+			*createvector 1 0 0 1
+			eval *surfacecreatedraglinealongvector 1 1 $StiffHeight 1 1 0 0 0		
+			incr stiff_i
+		}
+	}
 	
-		# Creates the outer bounds of the rectangle
-		eval CreateLineAndAppend "$p_BottomLeft $p_BottomRight" "Outer_Bottom"
-		eval CreateLineAndAppend "$p_BottomLeft $p_TopLeft"     "Outer_Left"
-		eval CreateLineAndAppend "$p_TopLeft    $p_TopRight"    "Outer_Top"
-		eval CreateLineAndAppend "$p_TopRight   $p_BottomRight" "Outer_Right"		
+	*createmark lines 1 all
+	*deletemark lines 1
+	
+	# Create the intersections
+	*createmark surfaces 1 all
+	*multi_surfs_lines_merge 1 0 0
+	
+	# # Move the surfaces to their own components. 
+	*createmark surfs 1 all
+	set allSurfs [hm_getmark surfs 1 all]
+	set lend $skinNumber
+	set newSurfs [lrange $allSurfs $lend end]
 
-		# Creates the surface from the outer bounds.
-		set temp_list "$::Geometry::lineArray(Outer_Bottom) $::Geometry::lineArray(Outer_Left) $::Geometry::lineArray(Outer_Top) $::Geometry::lineArray(Outer_Right)"
-		CreateSurfaceAndAppend $temp_list "Skin_Web"
+	*clearmark surfs 1
+
+	# Move each skin sections to its own component. 
+	set skin_i 100
+	set foundFace ""
+	foreach surf $allsurf {
 		
-		# Create cuts at centerlines.
-		CreateLineAndAppend 0 [expr $PanelHeight/2] 0 $PanelLength [expr $PanelHeight/2] 0 "MiddleLine"
+		if {[lsearch $foundFace $surf] < 0} {
+			*createmark surfs 1 $surf
+			*appendmark surfs 1 "by face"
+			
+			set newFace [hm_getmark surfs 1]
+			
+			append foundFace " $newFace"
 
-		# Create cuts at the ribs positions.
+			createComponent "Skin_$skin_i" $skin_i 
+			eval *movemark surfaces 1 "Skin_$skin_i"
+			incr skin_i
+		}
+		
+		set faces [hm_getmark surfs 1]
+
+	}
+
+	# # Move each skin sections to its own component. 
+	# set skin_i 200 
+	# foreach surf $allsurf { 
+		# createComponent "Skin_$skin_i" $skin_i  
+		# eval *createmark surfaces 1 $surf 
+		# eval *movemark surfaces 1 "Skin_$skin_i" 
+		# incr skin_i 
+	# } 
+
+	set stiff_i 200
+	foreach blade $newSurfs {
+		createComponent "Stiff_$stiff_i" $stiff_i
+		eval *createmark surfaces 1 $blade
+		eval *movemark surfaces 1 "Stiff_$stiff_i" 
+		incr stiff_i
+	}
+	
+	*createmark comps 1 "Skin_temp"
+	*deletemark comps 1
+	
+	# Do the meshing of the Panel. 
+	::Mesh::meshEverything
+	
+	# Delete the mesh outside the perimeter.
+	catch {
+		*createmark elements 1 "by box" 0.0 0.0 -100.0 $PanelLength $PanelHeight 100 0 outside 1 1 0
+		*deletemark elems 1
+	}
+	
+	# # Renumber the mesh for each stiffeners. 
+	# set odd 0
+	# set j 1
+	# foreach surf $newSurfs {
+		# *createmark elems 1 "by surface" $surf
+		# set startid [expr $j * 1000000]
+		# eval *renumbersolverid elements 1 $startid 1 0 0 0 0 0
+		
+		# if $odd {
+			# set odd 0
+			# incr j
+		# } else {
+			# set odd 1
+		# }
+	# }
+
+}
+	
+	proc createGeometry_xy_Combined {} {
+
+	# Creates the skin from the PanelHeight and Lenght and 4 positions vectors. 
+	variable PanelHeight
+	variable PanelLength
+	variable lineArray
+	variable surfaceArray
+	variable StiffHeight
+	variable NumberOfRibs
+	
+	variable XBeg	
+	variable YBeg		
+	variable XEnd		
+	variable YEnd 	
+
+	hm_answernext yes
+	*deletemodel 
+
+	# Create the skin component and set the colour to blue. 
+	createComponent "Skin_temp" "1"
+
+	# Creates the rectangle from the parameters. 
+	set p_BottomLeft 	"0  			0    			0"
+	set p_BottomRight 	"$PanelLength 	0    			0"
+	set p_TopLeft	 	"0  			$PanelHeight 	0"
+	set p_TopRight	 	"$PanelLength 	$PanelHeight 	0"	
+
+	# Creates the outer bounds of the rectangle
+	eval CreateLineAndAppend "$p_BottomLeft $p_BottomRight" "Outer_Bottom"
+	eval CreateLineAndAppend "$p_BottomLeft $p_TopLeft"     "Outer_Left"
+	eval CreateLineAndAppend "$p_TopLeft    $p_TopRight"    "Outer_Top"
+	eval CreateLineAndAppend "$p_TopRight   $p_BottomRight" "Outer_Right"		
+
+	# Creates the surface from the outer bounds.
+	set temp_list "$::Geometry::lineArray(Outer_Bottom) $::Geometry::lineArray(Outer_Left) $::Geometry::lineArray(Outer_Top) $::Geometry::lineArray(Outer_Right)"
+	CreateSurfaceAndAppend $temp_list "Skin_Web"
+	
+	# Create cuts at centerlines.
+	CreateLineAndAppend 0 [expr $PanelHeight/2] 0 $PanelLength [expr $PanelHeight/2] 0 "MiddleLine"
+
+	# Create cuts at the ribs positions.
+	if {$NumberOfRibs > 0} {
 		set Ls [expr $PanelLength/$NumberOfRibs]
 		
 		for {set i 1} {$i <= $NumberOfRibs} {incr i} {
 				set cut [expr $Ls*$i - $Ls / 2]
 				CreateLineAndAppend $cut 0 0 $cut $PanelHeight 0 "CenterLine"
 		}
+	}
+	
+	# If the number of cut is even, add a middle cut. 
+	if  [expr {($NumberOfRibs % 2) == 0}] {
+		CreateLineAndAppend [expr $PanelLength/2] 0 0 [expr $PanelLength/2] $PanelHeight 0 "CenterLine"
+	}
+
+	# Create each stiffeners
+	set i 1
+	foreach xb $XBeg xe $XEnd yb $YBeg ye $YEnd {
+		set xbPos [expr $xb * $PanelLength]
+		set xePos [expr $xe * $PanelLength]
+		set ybPos [expr $yb * $PanelHeight]
+		set yePos [expr $ye * $PanelHeight]
+	
+		CreateLineAndAppend_xy $xbPos $ybPos $xePos $yePos "Stiff_$i"
+		incr i
+	}		
+
+	# Cut the skin for each stiffeners and boundary conditions. 
+	set cutList ""
+	foreach {name ID} [array get ::Geometry::lineArray] {
+		append cutList " $ID"
+	}
+	
+	*createmark surfaces 1 all
+	eval *createmark lines 2 $cutList
+	*createvector 1 0 0 1
+	*surfacemarksplitwithlines 1 2 1 9 0
+	*normalsoff 
+	*clearmarkall
+
+	# Create a surface list before creating the blades. 
+	*createmark surfs 1 all
+	set skinSurf [hm_getmark surf 1]
+	set skinNumber [llength $skinSurf]
 		
-		# If the number of cut is even, add a middle cut. 
-		if  [expr {($NumberOfRibs % 2) == 0}] {
-			CreateLineAndAppend [expr $PanelLength/2] 0 0 [expr $PanelLength/2] $PanelHeight 0 "CenterLine"
+	set stiff_i 100	
+	# Create the blades
+	foreach {stiff ID} [array get ::Geometry::lineArray] {
+		if {[string range $stiff 0 3] == "Stif"} {
+			eval *createmark lines 1 $ID
+			*createvector 1 0 0 1
+			eval *surfacecreatedraglinealongvector 1 1 $StiffHeight 1 1 0 0 0		
+			incr stiff_i
 		}
+	}
+	
+	*createmark lines 1 all
+	*deletemark lines 1
+	
+	# Create the intersections
+	*createmark surfaces 1 all
+	*multi_surfs_lines_merge 1 0 0
+	
+	## Move the surfaces to their own components. 
+	*createmark surfs 1 all
+	set allSurfs [hm_getmark surfs 1 all]
+	set lend $skinNumber
+	set newSurfs [lrange $allSurfs $lend end]
 
-		# Create each stiffeners
-		set i 1
-		foreach xb $XBeg xe $XEnd yb $YBeg ye $YEnd {
-			set xbPos [expr $xb * $PanelLength]
-			set xePos [expr $xe * $PanelLength]
-			set ybPos [expr $yb * $PanelHeight]
-			set yePos [expr $ye * $PanelHeight]
-		
-			CreateLineAndAppend_xy $xbPos $ybPos $xePos $yePos "Stiff_$i"
-			incr i
-		}		
+	*clearmark surfs 1
 
-		# Cut the skin for each stiffeners and boundary conditions. 
-		set cutList ""
-		foreach {name ID} [array get ::Geometry::lineArray] {
-			append cutList " $ID"
-		}
-		
-		*createmark surfaces 1 all
-		eval *createmark lines 2 $cutList
-		*createvector 1 0 0 1
-		*surfacemarksplitwithlines 1 2 1 9 0
-		*normalsoff 
-		*clearmarkall
-		#*createmark lines 1 all
-		#*deletemark lines 1
-
-		# Create a surface list before creating the blades. 
-		*createmark surfs 1 all
-		set allsurf [hm_getmark surf 1]
-		set skinNumber [llength $allsurf]
-			
-		set stiff_i 100	
-		# Create the blades
-		foreach {stiff ID} [array get ::Geometry::lineArray] {
-			if {[string range $stiff 0 4] == "Stiff"} {
-				#createComponent "Stiff_$stiff_i" $stiff_i 
-				#set collName "Stiff_$stiff_i"
-				#eval *currentcollector components $collName
-				eval *createmark lines 1 $ID
-				*createvector 1 0 0 1
-				eval *surfacecreatedraglinealongvector 1 1 $StiffHeight 1 1 0 0 0		
-				incr stiff_i
-			}
-		}
-		
-		*createmark lines 1 all
-		*deletemark lines 1
-		
-		# Create the intersections
-		*createmark surfaces 1 all
-		*multi_surfs_lines_merge 1 0 0
-		
-		# # Move the surfaces to their own components. 
-		*createmark surfs 1 all
-		set allSurfs [hm_getmark surfs 1 all]
-		set lend $skinNumber
-		set newSurfs [lrange $allSurfs $lend end]
-
-		*clearmark surfs 1
-
-		# Move each skin sections to its own component. 
-		set skin_i 100
-		set foundFace ""
-		foreach surf $allsurf {
-			
-			if {[lsearch $foundFace $surf] < 0} {
-				*createmark surfs 1 $surf
-				*appendmark surfs 1 "by face"
+	# Move each skin sections to its own component. 
+	set skin_i 100
+	set foundFace ""
+	foreach surf $skinSurf {
 				
-				set newFace [hm_getmark surfs 1]
-				
-				append foundFace " $newFace"
-
-				createComponent "Skin_$skin_i" $skin_i 
-				eval *movemark surfaces 1 "Skin_$skin_i"
-				incr skin_i
-			}
+		# Check if face is already done, if not create it. 
+		if {[lsearch $foundFace $surf] < 0} {
+			*createmark surfs 1 $surf
+			*appendmark surfs 1 "by face"
 			
-			set faces [hm_getmark surfs 1]
+			set newFace [hm_getmark surfs 1]
+			
+			append foundFace " $newFace"
 
+			createComponent "Skin_$skin_i" $skin_i 
+			eval *movemark surfaces 1 "Skin_$skin_i"
+			incr skin_i
 		}
+		
+		set faces [hm_getmark surfs 1]
 
-		# # Move each skin sections to its own component. 
-		# set skin_i 200 
-		# foreach surf $allsurf { 
-			# createComponent "Skin_$skin_i" $skin_i  
-			# eval *createmark surfaces 1 $surf 
-			# eval *movemark surfaces 1 "Skin_$skin_i" 
-			# incr skin_i 
-		# } 
+	}
 
-		set stiff_i 200
-		foreach blade $newSurfs {
-			createComponent "Stiff_$stiff_i" $stiff_i
-			eval *createmark surfaces 1 $blade
-			eval *movemark surfaces 1 "Stiff_$stiff_i" 
+	set stiff_i 200
+	set foundFace ""
+	
+	foreach surf $newSurfs {
+				
+		# Check if face is already done, if not create it. 
+		if {[lsearch $foundFace $surf] < 0} {
+		
+			*createmark surfs 1 $surf
+			*appendmark surfs 1 "by face"
+			
+			set newFace [hm_getmark surfs 1]
+			
+			append foundFace " $newFace"
+
+			createComponent "Stif_$stiff_i" $stiff_i
+			eval *movemark surfaces 1 "Stif_$stiff_i"
 			incr stiff_i
 		}
 		
-		*createmark comps 1 "Skin_temp"
-		*deletemark comps 1
-		
-		# Do the meshing of the Panel. 
-		::Mesh::meshEverything
-		
-		# Delete the mesh outside the perimeter.
-		catch {
-			*createmark elements 1 "by box" 0.0 0.0 -100.0 $PanelLength $PanelHeight 100 0 outside 1 1 0
-			*deletemark elems 1
-		}
-		
-		# # Renumber the mesh for each stiffeners. 
-		# set odd 0
-		# set j 1
-		# foreach surf $newSurfs {
-			# *createmark elems 1 "by surface" $surf
-			# set startid [expr $j * 1000000]
-			# eval *renumbersolverid elements 1 $startid 1 0 0 0 0 0
-			
-			# if $odd {
-				# set odd 0
-				# incr j
-			# } else {
-				# set odd 1
-			# }
-		# }
+		set faces [hm_getmark surfs 1]
 
 	}
+	
+	*createmark comps 1 "Skin_temp"
+	*deletemark comps 1
+	
+	# Mesh Everything.
+	::Mesh::meshEverything
+	
+	# Delete the mesh outside the perimeter.
+	catch {
+		*createmark elements 1 "by box" 0.0 0.0 -100.0 $PanelLength $PanelHeight 100 0 outside 1 1 0
+		*deletemark elems 1
+	}
+
+}
 
 }
