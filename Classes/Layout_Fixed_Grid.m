@@ -56,12 +56,14 @@ classdef Layout_Fixed_Grid
             
         end
         
-        function obj = PlotGraph(obj,DispGrid,square)
+        function obj = PlotGraph(obj,DispGrid,DispSquare, DispSym)
             
             % Load Data
             XY           = table2array([obj.Graph.Nodes(:,'X'),obj.Graph.Nodes(:,'Y')]);
             Offset       = table2array([obj.Graph.Nodes(:,'OffSetX'),obj.Graph.Nodes(:,'OffSetY')]);
             Pos          = XY + Offset;
+            
+
             
             Names     = string(obj.Graph.Nodes.Name);
             State     = table2array(obj.Graph.Nodes(:,'State'));
@@ -87,7 +89,7 @@ classdef Layout_Fixed_Grid
             W = obj.PartialRadius;
             H = obj.PartialRadius;
             
-            if square
+            if DispSquare
                 for i = 1:length(XY)
                    rectangle('Position',[XY(i,1)-W/2,XY(i,2)-H/2,W,H])
                 end
@@ -99,8 +101,44 @@ classdef Layout_Fixed_Grid
                 Point2 = obj.Graph.findnode(EndNodes(i,2));
                 line([Pos(Point1,1) Pos(Point2,1)], [Pos(Point1,2) Pos(Point2,2)])
             end
+    
+            if length(DispSym) == 2
+               
+                if DispSym(1) && DispSym(2)
+                    for i = 1:size(EndNodes,1)
+                        Point1 = obj.Graph.findnode(EndNodes(i,1));
+                        Point2 = obj.Graph.findnode(EndNodes(i,2));
+                        line([-Pos(Point1,1) -Pos(Point2,1)], [Pos(Point1,2) Pos(Point2,2)])
+                    end
+                    for i = 1:size(EndNodes,1)
+                        Point1 = obj.Graph.findnode(EndNodes(i,1));
+                        Point2 = obj.Graph.findnode(EndNodes(i,2));
+                        line([Pos(Point1,1) Pos(Point2,1)], [-Pos(Point1,2) -Pos(Point2,2)])
+                    end
+                    for i = 1:size(EndNodes,1)
+                        Point1 = obj.Graph.findnode(EndNodes(i,1));
+                        Point2 = obj.Graph.findnode(EndNodes(i,2));
+                        line([-Pos(Point1,1) -Pos(Point2,1)], [-Pos(Point1,2) -Pos(Point2,2)])
+                    end
+                elseif DispSym(1)
+                    for i = 1:size(EndNodes,1)
+                        Point1 = obj.Graph.findnode(EndNodes(i,1));
+                        Point2 = obj.Graph.findnode(EndNodes(i,2));
+                        line([-Pos(Point1,1) -Pos(Point2,1)], [Pos(Point1,2) Pos(Point2,2)])
+                    end
+                    
+                elseif DispSym(2)
+                    for i = 1:size(EndNodes,1)
+                        Point1 = obj.Graph.findnode(EndNodes(i,1));
+                        Point2 = obj.Graph.findnode(EndNodes(i,2));
+                        line([Pos(Point1,1) Pos(Point2,1)], [-Pos(Point1,2) -Pos(Point2,2)])
+                    end
+                end
+                axis([-1.5 1.5 -1.5 1.5])
+            else
+                axis([-0.5 1.5 -0.5 1.5])
+            end
             
-            axis([-0.5 1.5 -0.5 1.5])
             pbaspect([1 1 1])
             
         end
@@ -374,7 +412,7 @@ classdef Layout_Fixed_Grid
              
         end
         
-        function [Compliance, Complexity, Sensi] = EvaluatePerformance(obj, folder, Symmetry)
+        function [Compliance, Mass, Sensi] = EvaluatePerformance(obj, folder, Symmetry)
             
             EndNodes = obj.Graph.Edges.EndNodes;
             Pos       = table2array([obj.Graph.Nodes(:,'X'),obj.Graph.Nodes(:,'Y')]);
@@ -385,30 +423,66 @@ classdef Layout_Fixed_Grid
             XEnd = zeros(1,size(EndNodes,1));
             YEnd = zeros(1,size(EndNodes,1));
             
-            if length(Symmetry) == 2
-            
-                if Symmetry(1)
-                    
-                end
-
-                if Symmetry(2)
-
-                end
-            
-            end
+            RealPos = Pos + OffSet;
                 
             for i = 1:size(EndNodes,1)
                 
                 Point1 = obj.Graph.findnode(EndNodes(i,1));
                 Point2 = obj.Graph.findnode(EndNodes(i,2));
                 
-                XBeg(i) = Pos(Point1,1) + OffSet(Point1,1);
-                YBeg(i) = Pos(Point1,2) + OffSet(Point1,2);
-                XEnd(i) = Pos(Point2,1) + OffSet(Point2,1);
-                YEnd(i) = Pos(Point2,2) + OffSet(Point2,2);
-                
+                XBeg(i) = RealPos(Point1,1);
+                YBeg(i) = RealPos(Point1,2);
+                XEnd(i) = RealPos(Point2,1);
+                YEnd(i) = RealPos(Point2,2);
+            
             end
+            
+            if length(Symmetry) == 2
+            
+                if Symmetry(1)
+                    
+                    XB_Old = XBeg/2;
+                    XE_Old = XEnd/2;
+                    
+                    XB_New = 1-XB_Old;
+                    XE_New = 1-XE_Old;
+                    
+                    YB_Old = YBeg;
+                    YE_Old = YEnd;
+                    
+                    YB_New = YB_Old;
+                    YE_New = YE_Old;
 
+                    XBeg = [XB_Old,XB_New];
+                    XEnd = [XE_Old,XE_New];
+                    YBeg = [YB_Old,YB_New];
+                    YEnd = [YE_Old,YE_New];
+                    
+                end
+
+                if Symmetry(2)
+
+                    XB_Old = XBeg;
+                    XE_Old = XEnd;
+                    
+                    XB_New = XB_Old;
+                    XE_New = XE_Old;
+                    
+                    YB_Old = YBeg/2;
+                    YE_Old = YEnd/2;
+                    
+                    YB_New = 1-YB_Old;
+                    YE_New = 1-YE_Old;
+
+                    XBeg = [XB_Old,XB_New];
+                    XEnd = [XE_Old,XE_New];
+                    YBeg = [YB_Old,YB_New];
+                    YEnd = [YE_Old,YE_New];
+                    
+                end
+
+            end
+                
             Names  = {  '::Geometry::PanelLength',  ...
                         '::Geometry::PanelHeight',  ...
                         '::Geometry::NumberOfRibs', ...
@@ -455,7 +529,7 @@ classdef Layout_Fixed_Grid
                         0,                      ...
                         5.0                     };
 
-            [Compliance, Complexity, Sensi] = RunHyperMesh_CompComp(Names, Values, folder,0);
+            [Compliance, Mass, Sensi] = RunHyperMesh_CompComp(Names, Values, folder,0);
            
         end
         

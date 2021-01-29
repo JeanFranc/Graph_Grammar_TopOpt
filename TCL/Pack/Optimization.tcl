@@ -633,7 +633,7 @@ namespace eval Optimization {
 		}
 		
 		# Create the mass constraint.
-		*opticonstraintcreate "MassCons" 1 1 -1e+20 4 1 0
+		eval *opticonstraintcreate "MassCons" 1 1 -1e+20 $MassCons 1 0
 	
 		# Create the compliance objective.
 		*optiobjectivecreate 2 0 1

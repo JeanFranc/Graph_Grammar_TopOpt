@@ -1,7 +1,7 @@
 %% Prepare WorkSpace
 
 clear all
-% close all
+close all
 clc
 
 addpath('Classes')
@@ -12,25 +12,23 @@ addpath('TCL')
 % Structural Parameters
 
 % Search Parameters
-SubSteps    = 16;
-MaxLayouts  = 800;
+SubSteps    = 8;
+MaxLayouts  = 8*30;
 
 % Initialize search
 AllLayouts        = {};
-AllLayouts{1}     = Layout_Fixed_Grid(4,4);
+AllSensi          = {};
+AllComp           = [];
+AllMass           = [];
+AllLayouts{1}     = Layout_Fixed_Grid(5,5);
 
 AllCodes = {};
 AllCodes{1} = AllLayouts{1}.getCode;
-
-figure(1)
-clf
-AllLayouts{1}.PlotGraph(1,1);
+[AllComp(1), AllMass(1), AllSensi{1}]  = AllLayouts{1}.EvaluatePerformance("D:\\Runs\\Evaluation_PreRun",[1 1]);
 
 % Do Random-Search
 tic
-
-% BAR = waitbar(0,'Generating new layouts...');
-
+BAR = waitbar(0,'Generating new layouts...');
 figure(2)
 clf
 while length(AllLayouts) <= MaxLayouts
@@ -46,9 +44,9 @@ while length(AllLayouts) <= MaxLayouts
     NewCodes   = cell(1,length(Queue));
     Sensi      = cell(1,length(Queue));
     Compliance = zeros(1,length(Queue));
-    Complexity = zeros(1,length(Queue));
+    Mass       = zeros(1,length(Queue));
     
-    parfor (i = 1:length(Queue),16)
+    parfor (i = 1:length(Queue),8)
 %     for i = 1:length(Queue)
         
         ThisLayout = Queue{i};
@@ -73,25 +71,25 @@ while length(AllLayouts) <= MaxLayouts
             filename = sprintf("D:\\Runs\\Evaluation_%i",i);
             
             try
-                [Compliance(i), Complexity(i), Sensi{i}] = NewLayouts{i}.EvaluatePerformance(filename);
+                [Compliance(i), Mass(i), Sensi{i}] = NewLayouts{i}.EvaluatePerformance(filename,[1 1]);
             catch Exception
+                 beep
                  fprintf('Fuck up in evaluation %i. \n',i)
                  disp(Exception)
+                 NewLayouts{i} = {};
+                 NewCodes{i}   = {};
             end
         end
 
     end
 
-    % Clean bugged out layouts. 
-
-    
     % Display New Results
     figure(2)
     clf
     for i = 1 : length(NewLayouts)
         if ~isempty(NewLayouts{i})
             subplot(4,4,i)
-            NewLayouts{i}.PlotGraph(0,0);
+            NewLayouts{i}.PlotGraph(0,0,[1,1]);
         end
     end
     
@@ -106,26 +104,28 @@ while length(AllLayouts) <= MaxLayouts
     end   
     pause(0.05)
     
-    beep
-    
     NewLayouts      = NewLayouts(~cellfun('isempty',NewLayouts));
     NewCodes        = NewCodes(~cellfun('isempty',NewCodes));
     
     % Extract from parallel runs, and ensure unique new solutions.
-    [ID1, ID2, ID3] = unique(NewCodes);
-    NewUnique       = NewCodes(ID2);
-    CheckAll        = ~ismember(NewUnique, AllCodes);
-    NewUnique       = NewUnique(CheckAll);
-    NewLayouts      = NewLayouts(ID2);
-    AllCodes        = [AllCodes,NewCodes];
-    AllLayouts      = [AllLayouts,NewLayouts];
+    [~, ID2, ~] = unique(NewCodes);
+    NewUnique       = zeros(size(NewCodes));
+    NewUnique(ID2)  = 1;
+    CheckAll        = ~ismember(NewCodes, AllCodes);
+    CheckedNew      = all([CheckAll;NewUnique]);
+    
+    AllCodes        = [AllCodes,NewCodes(CheckedNew)];
+    AllLayouts      = [AllLayouts,NewLayouts(CheckedNew)];
+    AllSensi        = [AllSensi,Sensi(CheckedNew)];
+    AllComp         = [AllComp,Compliance(CheckedNew)];
+    AllMass         = [AllMass,Mass(CheckedNew)];
 
-%     msg = sprintf('Generating New Layouts... (%1.2f seconds elapsed)',toc);
-%     waitbar(length(AllLayouts) / MaxLayouts, BAR,msg)
+    msg = sprintf('Generating New Layouts %i... (%1.2f seconds elapsed)',length(AllLayouts),toc);
+    waitbar(length(AllLayouts) / MaxLayouts, BAR,msg)
     
 end
 
-% close(BAR);
+close(BAR);
 
 fprintf('Generated %i Layouts in %1.2f seconds\n',length(AllLayouts),toc);
 
