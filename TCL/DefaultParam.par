@@ -5,15 +5,16 @@
 
 ::Geometry::NumberOfRibs 0
 
-::Geometry::XBeg 	 "0.33333     0.73333" 
-::Geometry::YBeg 	 "0         0.2" 
-::Geometry::XEnd 	 "0.73333           1" 
-::Geometry::YEnd 	 "0.2     0.33333" 
 
 #::Geometry::XBeg 	 "0        0.28        0.44        0.56        0.72 0" 
 #::Geometry::YBeg 	 "0        0.21        0.33        0.42        0.54 1" 
 #::Geometry::XEnd 	 "0.28        0.44        0.56        0.72           1 1 " 
 #::Geometry::YEnd 	 "0.21        0.33        0.42        0.54        0.75 0" 
+
+::Geometry::XBeg 	 "0" 
+::Geometry::YBeg 	 "0" 
+::Geometry::XEnd 	 "1" 
+::Geometry::YEnd 	 "0" 
 
 ::Geometry::StiffHeight 	1.50000000
 

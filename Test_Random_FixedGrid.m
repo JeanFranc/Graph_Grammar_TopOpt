@@ -19,12 +19,13 @@ MaxLayouts  = 8*30;
 AllLayouts        = {};
 AllSensi          = {};
 AllComp           = [];
+AllComplexity     = [];
 AllMass           = [];
 AllLayouts{1}     = Layout_Fixed_Grid(5,5);
 
 AllCodes = {};
 AllCodes{1} = AllLayouts{1}.getCode;
-[AllComp(1), AllMass(1), AllSensi{1}]  = AllLayouts{1}.EvaluatePerformance("D:\\Runs\\Evaluation_PreRun",[1 1]);
+[AllComp(1), AllMass(1), AllComplexity(1),~]  = AllLayouts{1}.EvaluatePerformance("D:\\Runs\\Evaluation_PreRun",[1 1]);
 
 % Do Random-Search
 tic
@@ -32,7 +33,7 @@ BAR = waitbar(0,'Generating new layouts...');
 figure(2)
 clf
 while length(AllLayouts) <= MaxLayouts
-   
+    
     % Fill the Queue with randomly chosen existing layouts. 
     QueueID = randi(length(AllLayouts),SubSteps,1);
 
@@ -45,6 +46,7 @@ while length(AllLayouts) <= MaxLayouts
     Sensi      = cell(1,length(Queue));
     Compliance = zeros(1,length(Queue));
     Mass       = zeros(1,length(Queue));
+    Complexity = zeros(1,length(Queue));
     
     parfor (i = 1:length(Queue),8)
 %     for i = 1:length(Queue)
@@ -71,7 +73,8 @@ while length(AllLayouts) <= MaxLayouts
             filename = sprintf("D:\\Runs\\Evaluation_%i",i);
             
             try
-                [Compliance(i), Mass(i), Sensi{i}] = NewLayouts{i}.EvaluatePerformance(filename,[1 1]);
+                [Compliance(i), Mass(i), Complexity(i), Sensi{i}] = NewLayouts{i}.EvaluatePerformance(filename,[1 1]);
+                fprintf('Evaluation %i completed. \n',i)
             catch Exception
                  beep
                  fprintf('Fuck up in evaluation %i. \n',i)
@@ -82,7 +85,9 @@ while length(AllLayouts) <= MaxLayouts
         end
 
     end
-
+    
+    clc
+    
     % Display New Results
     figure(2)
     clf
@@ -99,10 +104,13 @@ while length(AllLayouts) <= MaxLayouts
         if ~isempty(Sensi{i})
             subplot(4,4,i)
             imshow(Sensi{i},[],'InitialMagnification',4000);
+            ylabel(num2str(Complexity(i)))
             xlabel(num2str(Compliance(i)))
         end
     end   
     pause(0.05)
+    
+    beep
     
     NewLayouts      = NewLayouts(~cellfun('isempty',NewLayouts));
     NewCodes        = NewCodes(~cellfun('isempty',NewCodes));
@@ -114,11 +122,13 @@ while length(AllLayouts) <= MaxLayouts
     CheckAll        = ~ismember(NewCodes, AllCodes);
     CheckedNew      = all([CheckAll;NewUnique]);
     
+    % Append the All Framework. 
     AllCodes        = [AllCodes,NewCodes(CheckedNew)];
     AllLayouts      = [AllLayouts,NewLayouts(CheckedNew)];
     AllSensi        = [AllSensi,Sensi(CheckedNew)];
     AllComp         = [AllComp,Compliance(CheckedNew)];
     AllMass         = [AllMass,Mass(CheckedNew)];
+    AllComplexity   = [AllComplexity,Complexity(CheckedNew)];
 
     msg = sprintf('Generating New Layouts %i... (%1.2f seconds elapsed)',length(AllLayouts),toc);
     waitbar(length(AllLayouts) / MaxLayouts, BAR,msg)
@@ -126,7 +136,7 @@ while length(AllLayouts) <= MaxLayouts
 end
 
 close(BAR);
-
+beep
 fprintf('Generated %i Layouts in %1.2f seconds\n',length(AllLayouts),toc);
 
 

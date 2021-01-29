@@ -734,11 +734,6 @@
 	# Mesh Everything.
 	::Mesh::meshEverything
 	
-	# Delete the mesh outside the perimeter.
-	catch {
-		*createmark elements 1 "by box" 0.0 0.0 -100.0 $PanelLength $PanelHeight 100 0 outside 1 1 0
-		*deletemark elems 1
-	}
 
 }
 

@@ -29,7 +29,8 @@ clear all
 clc
 addpath('Data')
 
-load Pressure_245.mat
+load Compression_244.mat
+% load Pressure_245.mat
 % load 248_Pressure.mat
 
 % Compute Complexity.
@@ -106,4 +107,14 @@ for i = 1:length(AllLayouts)
 end
 
 
+%% Read compression results. 
 
+clear all
+close all
+clc
+addpath('Data')
+
+load Compression_247.mat
+
+scatter(AllComplexity, log10(AllComp))
+labelpoints(AllComplexity, log10(AllComp), string(1:length(AllComplexity)))

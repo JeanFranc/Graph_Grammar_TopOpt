@@ -43,6 +43,7 @@ New         = New.CreateStiffener('N2','N22');
 New.PlotGraph(1,0,[1 1]);
 pause(0.05)
 
+[Compliance, Mass, Sensi] = New.EvaluatePerformance("D:\Runs\Test9898", [1 1]);
 
 %%
 figure(2)
@@ -75,15 +76,30 @@ InitLayout  = Layout_Fixed_Grid(8,8);
 InitLayout.PlotGraph(1,0,[1 1]);
 pause(0.05)
 
-New         = InitLayout.CreateStiffener('N16','N58');
+New         = InitLayout.CreateStiffener('N7','N49');
 clf
 New.PlotGraph(1,0,[1 1]);
 pause(0.05)
 
-New         = New.CreateStiffener('N1','N37');
+New         = New.CreateStiffener('N28','N64');
 clf
 New.PlotGraph(1,0,[1 1]);
 pause(0.05)
 
+[Compliance, Mass, Complexity, Sensi] = New.EvaluatePerformance("D:\Runs\Test6969", [1 1]);
+
+%%
+figure(1)
+clf
+InitLayout  = Layout_Fixed_Grid(3,3);
+InitLayout.PlotGraph(1,0,[1 1]);
+pause(0.05)
+
+% Actions = InitLayout.ListOfPossibleActions;
+
+New         = InitLayout.CreateStiffener('N3','N9');
+clf
+New.PlotGraph(1,0,[1 1]);
+pause(0.05)
+% 
 [Compliance, Mass, Sensi] = New.EvaluatePerformance("D:\Runs\Test6969", [1 1]);
-

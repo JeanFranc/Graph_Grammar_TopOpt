@@ -62,9 +62,7 @@ classdef Layout_Fixed_Grid
             XY           = table2array([obj.Graph.Nodes(:,'X'),obj.Graph.Nodes(:,'Y')]);
             Offset       = table2array([obj.Graph.Nodes(:,'OffSetX'),obj.Graph.Nodes(:,'OffSetY')]);
             Pos          = XY + Offset;
-            
 
-            
             Names     = string(obj.Graph.Nodes.Name);
             State     = table2array(obj.Graph.Nodes(:,'State'));
             EndNodes  = obj.Graph.Edges.EndNodes;
@@ -108,35 +106,35 @@ classdef Layout_Fixed_Grid
                     for i = 1:size(EndNodes,1)
                         Point1 = obj.Graph.findnode(EndNodes(i,1));
                         Point2 = obj.Graph.findnode(EndNodes(i,2));
-                        line([-Pos(Point1,1) -Pos(Point2,1)], [Pos(Point1,2) Pos(Point2,2)])
+                        line([2-Pos(Point1,1) 2-Pos(Point2,1)], [Pos(Point1,2) Pos(Point2,2)])
                     end
                     for i = 1:size(EndNodes,1)
                         Point1 = obj.Graph.findnode(EndNodes(i,1));
                         Point2 = obj.Graph.findnode(EndNodes(i,2));
-                        line([Pos(Point1,1) Pos(Point2,1)], [-Pos(Point1,2) -Pos(Point2,2)])
+                        line([Pos(Point1,1) Pos(Point2,1)], [2-Pos(Point1,2) 2-Pos(Point2,2)])
                     end
                     for i = 1:size(EndNodes,1)
                         Point1 = obj.Graph.findnode(EndNodes(i,1));
                         Point2 = obj.Graph.findnode(EndNodes(i,2));
-                        line([-Pos(Point1,1) -Pos(Point2,1)], [-Pos(Point1,2) -Pos(Point2,2)])
+                        line([2-Pos(Point1,1) 2-Pos(Point2,1)], [2-Pos(Point1,2) 2-Pos(Point2,2)])
                     end
                 elseif DispSym(1)
                     for i = 1:size(EndNodes,1)
                         Point1 = obj.Graph.findnode(EndNodes(i,1));
                         Point2 = obj.Graph.findnode(EndNodes(i,2));
-                        line([-Pos(Point1,1) -Pos(Point2,1)], [Pos(Point1,2) Pos(Point2,2)])
+                        line([2-Pos(Point1,1) 2-Pos(Point2,1)], [Pos(Point1,2) Pos(Point2,2)])
                     end
                     
                 elseif DispSym(2)
                     for i = 1:size(EndNodes,1)
                         Point1 = obj.Graph.findnode(EndNodes(i,1));
                         Point2 = obj.Graph.findnode(EndNodes(i,2));
-                        line([Pos(Point1,1) Pos(Point2,1)], [-Pos(Point1,2) -Pos(Point2,2)])
+                        line([Pos(Point1,1) Pos(Point2,1)], [2-Pos(Point1,2) 2-Pos(Point2,2)])
                     end
                 end
-                axis([-1.5 1.5 -1.5 1.5])
+                axis([-0.5 2.5 -0.5 2.5])
             else
-                axis([-0.5 1.5 -0.5 1.5])
+                axis([-0.5 2.5 -0.5 2.5])
             end
             
             pbaspect([1 1 1])
@@ -347,8 +345,7 @@ classdef Layout_Fixed_Grid
             % List possible connections just for the not-inactive nodes.
             NotInactive = find(~strcmp(States,'Inactive')); 
             Actions = {};
-            
-            
+             
             for i = 1 : length(NotInactive)
                 
                 EdgeID = outedges(obj.Graph,NotInactive(i));
@@ -383,9 +380,17 @@ classdef Layout_Fixed_Grid
                             Side1 = Side1(2:end);
                             Side2 = Side2(2:end);
 
-                            if ~any(ismember(Side1,Side2))
-                                Actions(end+1,:) = {Name1, Name2};
+                            if length(Side1) == 2 && length(Side2) == 2
+                                if any(~ismember(Side1,Side2))
+                                    Actions(end+1,:) = {Name1, Name2};
+                                end
+                            else
+                                if ~any(ismember(Side1,Side2))
+                                    Actions(end+1,:) = {Name1, Name2};
+                                end
                             end
+                            
+
 
                         elseif any(~strcmp(Name2,ConnNodes))
 
@@ -412,7 +417,7 @@ classdef Layout_Fixed_Grid
              
         end
         
-        function [Compliance, Mass, Sensi] = EvaluatePerformance(obj, folder, Symmetry)
+        function [Compliance, Mass, Complexity, Sensi] = EvaluatePerformance(obj, folder, Symmetry)
             
             EndNodes = obj.Graph.Edges.EndNodes;
             Pos       = table2array([obj.Graph.Nodes(:,'X'),obj.Graph.Nodes(:,'Y')]);
@@ -514,15 +519,15 @@ classdef Layout_Fixed_Grid
                         XEnd,                   ...
                         YEnd,                   ...
                         1.5,                    ...
-                        'Alu',                  ...
+                        'Alu7075',              ...
                         10700000,               ...
                         0.33,                   ...
                         0.1,                    ...
                         68000,                  ...
                         0.5,                    ...
-                        10,                     ...
-                        "Pressure",             ...
-                        "SimplySupported",      ...
+                        120120,                 ...
+                        "AxialCompression",     ...
+                        "Infinite",             ...
                         0,                      ...
                         0,                      ...
                         1,                      ...
@@ -531,6 +536,8 @@ classdef Layout_Fixed_Grid
 
             [Compliance, Mass, Sensi] = RunHyperMesh_CompComp(Names, Values, folder,0);
            
+            Complexity = log10(cond(Sensi));
+            
         end
         
     end
