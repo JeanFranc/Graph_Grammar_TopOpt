@@ -114,7 +114,7 @@ close all
 clc
 addpath('Data')
 
-load Compression_247.mat
+load SimplySupported_Compression.mat
 
 scatter(AllComplexity, log10(AllComp))
 labelpoints(AllComplexity, log10(AllComp), string(1:length(AllComplexity)))
