@@ -13,10 +13,11 @@ addpath('TCL')
 
 % Search Parameters
 SubSteps    = 8; % Burst Size;
-MaxLayouts  = 8*10;
+MaxLayouts  = 8*30;
+ArchiveSize = 20;
 
 % Initialize Layout. 
-Init.Layout       = Layout_Fixed_Grid(3,3);
+Init.Layout       = Layout_Fixed_Grid(5,5);
 Init.Code         = Init.Layout.getCode;
 
 [Init.Compliance, Init.Mass, Init.Complexity,Init.Sensibility]  = Init.Layout.EvaluatePerformance("D:\\Runs\\Evaluation_PreRun",[1 1]);
@@ -31,6 +32,7 @@ Archive{1}  = Init;
 CodeRegistry        = {};
 CodeRegistry{1}     = Init.Code;
 
+tic
 while length(CodeRegistry) <= MaxLayouts
     
     % Fill the Queue with randomly chosen existing layouts from the archive. 
@@ -48,7 +50,6 @@ while length(CodeRegistry) <= MaxLayouts
     end
     
     % Generate new layouts until there is "SubSteps" new layouts. 
-    tic
     for i = 1:length(Queue)
         
         % Generate new layouts until it is a new one. 
@@ -104,35 +105,90 @@ while length(CodeRegistry) <= MaxLayouts
         
     end
     
+    Burst      = Burst(~cellfun('isempty',Burst));
+    
     clc
     beep
     
     % Rebuild the archive with the new results. 
-    TempArchive = [Archive;Burst];
-    p = [];
+    NewArchive  = [Archive;Burst];
+    Archive     = {};
     
-    % Build the ParetoFrontier.
-    for i = 1:length(TempArchive)
-       p(i,1) = TempArchive{i}.Compliance;
-       p(i,2) = TempArchive{i}.Complexity;
+    p = [];
+    for i = 1:length(NewArchive)
+       p(i,1) = NewArchive{i}.Compliance;
+       p(i,2) = NewArchive{i}.Complexity;
     end
-    [idxs] = paretoQS(p);
-    Archive = TempArchive(idxs);
+    
+    figure(2)
+    clf
+    scatter(p(:,2),p(:,1),'ro')
+    hold on
+    xlabel('TESTING ZONE')
+    pause(0.005) % Pause to update figures
+    
+    
+    % If the Archive is still small, just add everything to the archive. 
+    if length(NewArchive) < ArchiveSize
+        Archive = NewArchive;
+    else
+        TempArchive = NewArchive;
+        while length(Archive) < ArchiveSize
+            
+            % Build the model for Pareto Evaluation.
+            p = [];
+            for i = 1:length(TempArchive)
+               p(i,1) = TempArchive{i}.Compliance;
+               p(i,2) = TempArchive{i}.Complexity;
+            end
+            
+            % Evaluate the pareto components. 
+            [idxs] = paretoQS(p);
+            
+            % Add the pareto components to the Archive.
+            Archive = [Archive; TempArchive(idxs)];
+            ID      = zeros(length(TempArchive),1);
+            ID(idxs)= 1;
+            TempArchive = TempArchive(~ID);
+        end
+    
+    end
+    
+%     % Rebuild the archive with the new results. 
+%     TempArchive = [Archive;Burst];
+%     p = [];
+%     
+%     % Build the ParetoFrontier.
+%     for i = 1:length(TempArchive)
+%        p(i,1) = TempArchive{i}.Compliance;
+%        p(i,2) = TempArchive{i}.Complexity;
+%     end
+%     [idxs] = paretoQS(p);
+%     Archive = TempArchive(idxs);
         
     % Display the result of this burst. 
     figure(1)
     clf
     for i = 1:length(Archive)
-        subplot(1,8,i)
-        Archive{i}.Layout.PlotGraph(0,0,[1 1])
+        try
+            subplot(5,5,i)
+            Archive{i}.Layout.PlotGraph(0,0,[1 1]);
+            xlabel(Archive{i}.Compliance)
+            ylabel(Archive{i}.Complexity)
+        end
+    end
+   
+    p = [];
+    for i = 1:length(Archive)
+       p(i,1) = Archive{i}.Compliance;
+       p(i,2) = Archive{i}.Complexity;
     end
     
     figure(2)
-    clf
-    scatter(p(:,2),p(:,1),'r')
-    hold on
-    scatter(p(idxs,2),p(idxs,1),'b')
+    scatter(p(:,2),p(:,1),'bx')
     xlabel('TESTING ZONE')
     pause(0.005) % Pause to update figures
     
 end
+
+toc
