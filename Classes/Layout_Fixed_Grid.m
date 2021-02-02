@@ -156,9 +156,17 @@ classdef Layout_Fixed_Grid
             obj.EdgeIt      = obj.EdgeIt + 1;         
             
             if ~isempty(obj.Graph.Edges)
-                newName         = string(newName);
-                EdgeTable       = table({N1 N2},1,{newName},'VariableNames',{'EndNodes','Weight','Name'});
-                obj.Graph       = obj.Graph.addedge(EdgeTable);
+                
+                % Check if edge already exists.
+                EndNodes = obj.Graph.Edges.EndNodes;
+                NewEndNodes = {N1 N2};
+                
+                if ~any(all(ismember(EndNodes, NewEndNodes,'rows')'))                
+                    newName         = string(newName);
+                    EdgeTable       = table({N1 N2},1,{newName},'VariableNames',{'EndNodes','Weight','Name'});
+                    obj.Graph       = obj.Graph.addedge(EdgeTable);
+                end
+                
             else
                 EdgeTable       = table({N1 N2},1,'VariableNames',{'EndNodes','Weight'});
                 obj.Graph       = obj.Graph.addedge(EdgeTable);
@@ -525,9 +533,9 @@ classdef Layout_Fixed_Grid
                         0.1,                    ...
                         68000,                  ...
                         0.5,                    ...
-                        120120,                 ...% Axial = 120120, Other = 10;
-                        "AxialCompression",     ...% AxialCompression, TransverseCompression, PureShear, Pressure.
-                        "SimplySupported",      ...
+                        10,                     ...% Axial = 120120, Other = 10;
+                        "Pressure",             ...% AxialCompression, TransverseCompression, PureShear, Pressure.
+                        "SimplySupported",      ...% Infinite, SimplySupported, Clamped, None. 
                         0,                      ...
                         0,                      ...
                         1,                      ...
@@ -537,6 +545,37 @@ classdef Layout_Fixed_Grid
             [Compliance, Mass, Sensi] = RunHyperMesh_CompComp(Names, Values, folder,0);
            
             Complexity = log10(cond(Sensi));
+            
+        end
+        
+        function NewLayout = CreateNewAction(obj, CodeRegistry)
+            
+            PossibleActions = obj.ListOfPossibleActions;
+            
+            OrderOfTries = randperm(length(PossibleActions),length(PossibleActions));
+            
+            i = 1;
+            foundNew = 0;
+            while i <= length(OrderOfTries) && ~foundNew
+                
+                N1      = PossibleActions{OrderOfTries(i),1};
+                N2      = PossibleActions{OrderOfTries(i),2};
+                
+                NewLayout     = obj.CreateStiffener(N1,N2);
+                NewCode       = NewLayout.getCode;
+                
+                isNew = ~any(ismember(CodeRegistry,NewCode));
+                
+                if isNew
+                    foundNew = 1;
+                end
+                i = i + 1;
+                
+            end
+
+            if foundNew == 0
+               NewLayout = {}; 
+            end
             
         end
         
