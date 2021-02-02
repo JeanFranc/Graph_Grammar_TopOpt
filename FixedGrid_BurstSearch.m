@@ -13,11 +13,11 @@ addpath('TCL')
 
 % Search Parameters
 SubSteps    = 8; % Burst Size;
-MaxLayouts  = 500;
-ArchiveSize = 16;
+MaxLayouts  = 80;
+ArchiveSize = 10;
 
 % Initialize Layout. 
-Init.Layout       = Layout_Fixed_Grid(9,9);
+Init.Layout       = Layout_Fixed_Grid(3,3);
 Init.Code         = Init.Layout.getCode;
 
 [Init.Compliance, Init.Mass, Init.Complexity,Init.Sensibility]  = Init.Layout.EvaluatePerformance("D:\\Runs\\Evaluation_PreRun",[1 1]);
@@ -116,6 +116,7 @@ while length(CodeRegistry) <= MaxLayouts
     
     % Evaluate the performance of the new layouts. 
     parfor (i = 1:length(Burst),8)
+%     for i = 1:length(Burst)
 
         try
             filename = sprintf("D:\\Runs\\Evaluation_%i",i);
@@ -133,7 +134,7 @@ while length(CodeRegistry) <= MaxLayouts
     Burst      = Burst(~cellfun('isempty',Burst));
     
     clc
-    beep
+    
     
     % Rebuild the archive with the new results. 
     NewArchive  = [Archive;Burst];
@@ -151,7 +152,6 @@ while length(CodeRegistry) <= MaxLayouts
     hold on
     xlabel('TESTING ZONE')
     pause(0.005) % Pause to update figures
-    
     
     % If the Archive is still small, just add everything to the archive. 
     if length(NewArchive) < ArchiveSize
@@ -179,17 +179,6 @@ while length(CodeRegistry) <= MaxLayouts
     
     end
     
-%     % Rebuild the archive with the new results. 
-%     TempArchive = [Archive;Burst];
-%     p = [];
-%     
-%     % Build the ParetoFrontier.
-%     for i = 1:length(TempArchive)
-%        p(i,1) = TempArchive{i}.Compliance;
-%        p(i,2) = TempArchive{i}.Complexity;
-%     end
-%     [idxs] = paretoQS(p);
-%     Archive = TempArchive(idxs);
         
     % Display the result of this burst. 
     figure(1)
@@ -213,6 +202,8 @@ while length(CodeRegistry) <= MaxLayouts
     scatter(p(:,2),p(:,1),'bx')
     xlabel('TESTING ZONE')
     pause(0.005) % Pause to update figures
+    
+    beep
     
 end
 

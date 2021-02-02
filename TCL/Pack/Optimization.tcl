@@ -10,7 +10,7 @@
 namespace eval Optimization {
  
 	variable handleList " "
-	variable MassCons   
+	variable MassCon   
  
  proc setOptimizationCards {} {
 	
@@ -594,7 +594,7 @@ namespace eval Optimization {
  
 	proc SetComplianceMassSizing {} {
 	
-		variable MassCons
+		variable MassCon
 	
 		# Add the global Mass Response
 		*createarray 6 0 0 0 0 0 0
@@ -614,7 +614,7 @@ namespace eval Optimization {
 		*optiresponsesetequationdata3 "Comp" 0 0 1 0
 		*optiresponsesetequationdata4 "Comp" 0 0 0 0 1 0 1 0
 		
-		# Create the design variable for each sections. 
+		# Create the design variable for each properties. 
 		*createmark props 1 all
 		set allProps [hm_getmark props 1]
 		
@@ -632,8 +632,49 @@ namespace eval Optimization {
 		
 		}
 		
+		
+		# Create the morphing domains
+		*morphcreatedomaindc elements 0 -1 0 0 0 0
+		*morphstoredomains 1
+		*createmark elements 1 all
+		*morphcreatedomaindc elements 1 2 0 0 0 1
+		*createmark domains 1 all
+		*morphreparam domains 1
+
+		# Creates the shape for stiffener height
+		*createmark handles 1 all
+		set h1 [hm_getmark handles 1]
+		set handleList ""
+
+		foreach handle $h1 {
+			set grid 		[hm_getentityvalue handle $handle grid 0]
+			set gridCoordz  [hm_getentityvalue node $grid globalz 0]	
+			if {$gridCoordz > 1.0} {
+				append handleList "local$handle "
+			}
+		}
+
+		if {[llength $handleList] > 0} {
+
+			eval *createmark handles 1 $handleList
+			*morphhypermorph handles 1 0 0 1 1 1 1 0 1 1
+
+			set id 1
+			set id300 301
+
+			foreach handle $handleList {
+			
+				set name "$handle-Z"
+				*shpdesvarcreate $name 1.0 0.0 -1.0 0.5 $id
+				eval *setvalue designvars name=$name STATUS=2 id={designvars $id300}
+				
+				incr id
+				incr id300
+			}
+		
+		}
 		# Create the mass constraint.
-		eval *opticonstraintcreate "MassCons" 1 1 -1e+20 $MassCons 1 0
+		eval *opticonstraintcreate "MassCon" 1 1 -1e+20 $MassCon 1 0
 	
 		# Create the compliance objective.
 		*optiobjectivecreate 2 0 1
@@ -643,19 +684,30 @@ namespace eval Optimization {
  
 	proc UnsetSizing {} {
 		catch {
-		*createmark optiresponses 1 all
-		*deletemark optiresponses 1
+			*createmark optiresponses 1 all
+			*deletemark optiresponses 1
 		}
 		
 		catch {
-		*createmark designvars 1 all
-		*deletemark designvars 1 
+			*createmark designvars 1 all
+			*deletemark designvars 1 
 		}
 		
 		catch {
-		*createmark opticontrols 1 "optistruct_opticontrol"
-		*deletemark opticontrols 1
+			*createmark opticontrols 1 "optistruct_opticontrol"
+			*deletemark opticontrols 1
 		}
+		
+		catch {
+			*createmark domains 1 all
+			*deletemark domains 1
+		}
+		
+		catch {
+			*createmark shapes 1 all
+			*deletemark shapes 1
+		}
+		
 	}
 
 	proc SetSensiAnalysis {normalPath p_name} {
@@ -673,7 +725,7 @@ namespace eval Optimization {
 		
 		foreach line $data_per_line {
 		
-			if ![string compare [lindex $line 0] "Design"] {
+			if {![string compare [lindex $line 0] "Design"] & [lindex $line 2] < 300} {
 				append DesVars " [lindex $line 3]"
 			}
 	

@@ -161,7 +161,7 @@ classdef Layout_Fixed_Grid
                 EndNodes = obj.Graph.Edges.EndNodes;
                 NewEndNodes = {N1 N2};
                 
-                if ~any(all(ismember(EndNodes, NewEndNodes,'rows')'))                
+                if ~any(all(ismember(EndNodes, NewEndNodes)'))                
                     newName         = string(newName);
                     EdgeTable       = table({N1 N2},1,{newName},'VariableNames',{'EndNodes','Weight','Name'});
                     obj.Graph       = obj.Graph.addedge(EdgeTable);
@@ -517,7 +517,7 @@ classdef Layout_Fixed_Grid
                         '::General::Stress',        ...
                         '::General::Sizing', 		...
                         '::General::Complexity',    ...
-                        '::Optimization::MassCons'      };
+                        '::Optimization::MassCon'};
 
             Values = {  20,                     ...
                         20,                     ...

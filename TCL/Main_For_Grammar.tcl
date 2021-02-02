@@ -73,7 +73,7 @@ set maxIter 30
 ::Optimization::SetComplianceMassSizing
 ::Optistruct::RunSizing $normalPath $p_name $maxIter
 
-# Run a 0-step sizing optimization with the results from compliance.
+# # Run a 0-step sizing optimization with the results from compliance.
 set c_name Complex_Anal
 ::Optimization::UnsetSizing
 ::Optimization::SetSensiAnalysis $normalPath $p_name

@@ -6,15 +6,11 @@
 ::Geometry::NumberOfRibs 0
 
 
-#::Geometry::XBeg 	 "0        0.28        0.44        0.56        0.72 0" 
-#::Geometry::YBeg 	 "0        0.21        0.33        0.42        0.54 1" 
-#::Geometry::XEnd 	 "0.28        0.44        0.56        0.72           1 1 " 
-#::Geometry::YEnd 	 "0.21        0.33        0.42        0.54        0.75 0" 
+::Geometry::XBeg 	 "0           0.28        0.44        0.56        0.72    0 0 " 
+::Geometry::YBeg 	 "0           0.21        0.33        0.42        0.54    1 0.5" 
+::Geometry::XEnd 	 "0.28        0.44        0.56        0.72        1.0     1 1.0" 
+::Geometry::YEnd 	 "0.21        0.33        0.42        0.54        0.75    0 0.5" 
 
-::Geometry::XBeg 	 "0" 
-::Geometry::YBeg 	 "0" 
-::Geometry::XEnd 	 "1" 
-::Geometry::YEnd 	 "0" 
 
 ::Geometry::StiffHeight 	1.50000000
 
@@ -31,8 +27,8 @@
 
 # ::BCs::LoadType, choices : AxialCompression, TransverseCompression, PureShear, Pressure.
 ::BCs::LoadType 		Pressure
-::BCs::Load 			120120
-#::BCs::Load            10
+#::BCs::Load 			120120
+::BCs::Load            10
 
 
 # Set the Analysis required for your needs. 
@@ -43,4 +39,4 @@
 ::General::Sizing 		1
 ::General::Complexity 	0
 
-::Optimization::MassCons  6.0
+::Optimization::MassCon  6.0
