@@ -1,16 +1,30 @@
 # PARAM1
 
 ::Geometry::PanelLength 20.0
-::Geometry::PanelHeight 20.0
+::Geometry::PanelHeight 16.66667
 
-::Geometry::NumberOfRibs 0
+::Geometry::NumberOfRibs 1
 
 
-::Geometry::XBeg 	 "0           0.28        0.44        0.56        0.72    0 0 " 
-::Geometry::YBeg 	 "0           0.21        0.33        0.42        0.54    1 0.5" 
-::Geometry::XEnd 	 "0.28        0.44        0.56        0.72        1.0     1 1.0" 
-::Geometry::YEnd 	 "0.21        0.33        0.42        0.54        0.75    0 0.5" 
+#::Geometry::XBeg 	 "0           0.28        0.44        0.56        0.72    0 0 " 
+#::Geometry::YBeg 	 "0           0.21        0.33        0.42        0.54    1 0.5" 
+#::Geometry::XEnd 	 "0.28        0.44        0.56        0.72        1.0     1 1.0" 
+#::Geometry::YEnd 	 "0.21        0.33        0.42        0.54        0.75    0 0.5" 
 
+#::Geometry::XBeg 	 " " 
+#::Geometry::YBeg 	 " " 
+#::Geometry::XEnd 	 " " 
+#::Geometry::YEnd 	 " " 
+
+# ::Geometry::XBeg 	 "0 0 0 0" 
+# ::Geometry::YBeg 	 "0.2 0.4 0.6 0.8" 
+# ::Geometry::XEnd 	 "1.0 1.0 1.0 1.0" 
+# ::Geometry::YEnd 	 "0.2 0.4 0.6 0.8" 
+
+::Geometry::XBeg 	 "0 0 0" 
+::Geometry::YBeg 	 "0.16667 0.5 0.83333333" 
+::Geometry::XEnd 	 "1.0 1.0 1.0" 
+::Geometry::YEnd 	 "0.16667 0.5 0.83333333" 
 
 ::Geometry::StiffHeight 	1.50000000
 
@@ -22,18 +36,18 @@
 
 ::Mesh::meshSize 		0.5
 
-# ::BCs::SideConditions, choices : Infinite, SimplySupported, Clamped, None. 
-::BCs::SideConditions 	SimplySupported
+# ::BCs::SideConditions, choices : Infinite, SimplySupported,Clamped, None. 
+::BCs::SideConditions 	Infinite
 
-# ::BCs::LoadType, choices : AxialCompression, TransverseCompression, PureShear, Pressure.
-::BCs::LoadType 		Pressure
+# ::BCs::LoadType, choices : AxialCompression, TransverseCompression, PureShear, Pressure, Mario5Points.
+::BCs::LoadType 		AxialCompression
 #::BCs::Load 			120120
-::BCs::Load            10
+::BCs::Load             120000
 
 
 # Set the Analysis required for your needs. 
 
-::General::Buckling 	0
+::General::Buckling 	1
 ::General::Stress 		0 
 
 ::General::Sizing 		1

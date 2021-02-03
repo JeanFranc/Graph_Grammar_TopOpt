@@ -10,17 +10,18 @@ addpath('TCL')
 
 %% Initialize Parameters
 % Structural Parameters
+Buckling = 0;
 
 % Search Parameters
 SubSteps    = 8; % Burst Size;
-MaxLayouts  = 80;
-ArchiveSize = 10;
+MaxLayouts  = 250;
+ArchiveSize = 8;
 
 % Initialize Layout. 
 Init.Layout       = Layout_Fixed_Grid(3,3);
 Init.Code         = Init.Layout.getCode;
 
-[Init.Compliance, Init.Mass, Init.Complexity,Init.Sensibility]  = Init.Layout.EvaluatePerformance("D:\\Runs\\Evaluation_PreRun",[1 1]);
+[Init.Compliance, Init.Mass, Init.Complexity,Init.Sensibility]  = Init.Layout.EvaluatePerformance("D:\\Runs\\Evaluation_PreRun",[1 1],Buckling);
 
 %% Start Burst Search.
 
@@ -41,6 +42,8 @@ while length(CodeRegistry) <= MaxLayouts
     
     % TWO MODE STRATEGY. Half the substep is from the "BEST" pareto. The
     % rest is from randomly chosen from the archive.
+    
+    clc
     
     if ~isempty(CompletedRegistry)
         CompletedRegistry = unique(CompletedRegistry);
@@ -79,7 +82,7 @@ while length(CodeRegistry) <= MaxLayouts
     for i = 1:length(Burst)
        Burst{i}.Code        = '';
        Burst{i}.Sensi       = [];
-       Burst{i}.Compliance  = [];
+       Burst{i}.Compliance    = [];
        Burst{i}.Mass        = [];
        Burst{i}.Complexity  = [];
     end
@@ -120,7 +123,7 @@ while length(CodeRegistry) <= MaxLayouts
 
         try
             filename = sprintf("D:\\Runs\\Evaluation_%i",i);
-            [Burst{i}.Compliance, Burst{i}.Mass, Burst{i}.Complexity, Burst{i}.Sensi] = Burst{i}.Layout.EvaluatePerformance(filename,[1 1]);
+            [Burst{i}.Compliance, Burst{i}.Mass, Burst{i}.Complexity, Burst{i}.Sensi] = Burst{i}.Layout.EvaluatePerformance(filename,[1 1],1);
             fprintf('Evaluation %i completed. \n',i)
         catch Exception
              beep
@@ -132,9 +135,6 @@ while length(CodeRegistry) <= MaxLayouts
     end
     
     Burst      = Burst(~cellfun('isempty',Burst));
-    
-    clc
-    
     
     % Rebuild the archive with the new results. 
     NewArchive  = [Archive;Burst];

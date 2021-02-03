@@ -40,7 +40,7 @@
 		# Launches optitruct and solves the problem once. 
 		hm_answernext "yes"
 		*feoutputwithdata "$home/templates/feoutput/optistruct/optistruct" "$solver_path.fem" 1 0 1 1 1
-		exec "$home/hwsolvers/scripts/optistruct.bat" "$solver_path.fem" -checkel NO
+		exec "$home/hwsolvers/scripts/optistruct.bat" "$solver_path.fem" -checkel NO -nt 2
 		
 		::Steps::printAllResponses 			$solver_path
 		::Steps::printAllDesignVariables 	$solver_path
@@ -53,7 +53,7 @@
 
 	proc RunSizing {path name maxIter} {
 	
-		eval *opticontrolcreate80sr1 1 $maxIter 0 0 0 0.6 0 0.01 0 1 0 0 0 0 0 0.005 0 0.5 0 0.2 0 0.5 1 0 0 10 0 0 0 0 0 0 0 0 1 0 1 0
+		eval *opticontrolcreate80sr1 1 $maxIter 0 0 0 0.6 0 0.01 0 1 0 0 0 0 0 0.005 0 0.5 0 0.2 0 0.5 1 1 0 10 0 0 0 0 0 0 0 0 1 0 1 0
 
 		# Set the environnement variables
 		set home [hm_info -appinfo ALTAIR_HOME]
@@ -85,7 +85,7 @@
 		# Launches optitruct and solves the problem once. 
 		hm_answernext "yes"
 		*feoutputwithdata "$home/templates/feoutput/optistruct/optistruct" "$solver_path.fem" 1 0 1 1 1
-		exec "$home/hwsolvers/scripts/optistruct.bat" "$solver_path.fem" -checkel NO
+		exec "$home/hwsolvers/scripts/optistruct.bat" "$solver_path.fem" -nt 2 -checkel NO
 		
 		
 		

@@ -44,6 +44,8 @@
 			TransverseLoad
 		} elseif [string equal $LoadType "PureShear"] {
 			PureShear
+		} elseif [string equal $LoadType "Mario5Points"] {
+			Mario5Points
 		} elseif [string equal $LoadType "Pressure"] {
 			PressureLoad
 		} else {
@@ -278,16 +280,65 @@
 
 		# Create the Y anchor at symmetry
 		eval *createmark nodes 1 \"by box\"  [expr $::Geometry::PanelLength/2] [expr $::Geometry::PanelHeight/2] 0 [expr $::Geometry::PanelLength/2] [expr $::Geometry::PanelHeight/2] 0 0 inside 0 1 0.01
-		*loadcreateonentity_curve nodes 1 3 1 0 0 -999999 -999999 -999999 -999999 0 0 0 0 0
+		*loadcreateonentity_curve nodes 1 3 1 0 0 -999999 0 0 0 0 0 0 0 0
 		
 		# Create the load collector.
-		*createentity loadcols name=PureShear
-		*createmark loadcols 1 "PureShear"
+		*createentity loadcols name=Pressure
+		*createmark loadcols 1 "Pressure"
 		*setvalue loadcols mark=1 color=4	
 		
 		# Create the pressure load
 		eval *createmark elems 1 \"by box\"  0 0 0 $::Geometry::PanelLength $::Geometry::PanelHeight 0 0 inside 1 1 0
 		*pressuresonentity_curve elements 1 1 0 0 1 $Load 30 1 0 0 0 0 0
+	
+	}
+ 
+ 
+	proc Mario5Points {} {
+		variable Load
+		# Create an anchor for in place displacement. 
+		*currentcollector loadcols "SPC"	
+		
+		# Create the Y anchor at symmetry
+		eval *createmark nodes 1 \"by box\"  [expr $::Geometry::PanelLength/2] [expr $::Geometry::PanelHeight/2] 0 [expr $::Geometry::PanelLength/2] [expr $::Geometry::PanelHeight/2] 0 0 inside 0 1 0.01
+		*loadcreateonentity_curve nodes 1 3 1 0 0 -999999 0 0 0 0 0 0 0 0
+		
+		# Create the load collector.
+		*createentity loadcols name=Pressure
+		*createmark loadcols 1 "Pressure"
+		*setvalue loadcols mark=1 color=4	
+		
+		addForceApproxLocation [expr $::Geometry::PanelLength/2] [expr $::Geometry::PanelHeight/2] [expr $Load / 5]
+		addForceApproxLocation [expr $::Geometry::PanelLength/3] [expr $::Geometry::PanelHeight/3] [expr $Load / 5]
+		addForceApproxLocation [expr 2*$::Geometry::PanelLength/3] [expr $::Geometry::PanelHeight/3] [expr $Load / 5]
+		addForceApproxLocation [expr 2*$::Geometry::PanelLength/3] [expr 2*$::Geometry::PanelHeight/3] [expr $Load / 5]
+		addForceApproxLocation [expr $::Geometry::PanelLength/3] [expr 2*$::Geometry::PanelHeight/3] [expr $Load / 5]	
+		
+		
+	}
+	
+	proc addForceApproxLocation {x y load} {
+	
+		#puts "*createmark elems 1 \"by box\"  $x $y 0 $x $y 0 0 inside 0 1 0.1"
+		eval *createmark elems 1 \"by box\"  $x $y 0 $x $y 0 0 inside 0 1 0.25
+		set elemMark [hm_getmark elems 1]
+
+		set elemList ""
+		set Area " "
+
+		foreach Elem $elemMark {
+			set cogz [hm_getvalue elements id=$Elem dataname=centerz]
+			if {$cogz < 0.01} {
+				set thisArea [hm_getvalue elements id=$Elem dataname=area]
+				append elemList "$Elem "
+				set Area [expr $Area + $thisArea]
+			}
+		}	
+
+		set thisLoad [expr $load / $Area]
+		
+		eval *createmark elems 1 $elemList
+		eval *pressuresonentity elems 1 0 0.0 0.0 $thisLoad $thisLoad 30 1
 	
 	}
  

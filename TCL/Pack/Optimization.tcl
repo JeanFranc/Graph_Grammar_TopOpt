@@ -604,15 +604,26 @@ namespace eval Optimization {
 		*optiresponsesetequationdata2 "Mass" 0 0 1 0
 		*optiresponsesetequationdata3 "Mass" 0 0 1 0
 		*optiresponsesetequationdata4 "Mass" 0 0 0 0 1 0 1 0
-		
-		# Add the global Compliance Response
-		*createarray 6 0 0 0 0 0 0
-		*createdoublearray 6 0 0 0 0 0 0
-		*optiresponsecreate "Comp" 31 0 0 0 0 0 6 0 0 0 1 6 1 6
-		*optiresponsesetequationdata1 "Comp" 0 0 0 0 1 0
-		*optiresponsesetequationdata2 "Comp" 0 0 1 0
-		*optiresponsesetequationdata3 "Comp" 0 0 1 0
-		*optiresponsesetequationdata4 "Comp" 0 0 0 0 1 0 1 0
+
+		# Add buckling if necessary.
+		if {$::General::Buckling} {
+			*createarray 6 0 0 0 0 0 0
+			*createdoublearray 6 0 0 0 0 0 0
+			*optiresponsecreate "Buck" 6 0 0 1 0 0 6 0 0 0 1 6 1 6
+			*optiresponsesetequationdata1 "Buck" 0 0 0 0 1 0
+			*optiresponsesetequationdata2 "Buck" 0 0 1 0
+			*optiresponsesetequationdata3 "Buck" 0 0 1 0
+			*optiresponsesetequationdata4 "Buck" 0 0 0 0 1 0 1 0
+		} else {
+			# Add the global Compliance Response
+			*createarray 6 0 0 0 0 0 0
+			*createdoublearray 6 0 0 0 0 0 0
+			*optiresponsecreate "Comp" 31 0 0 0 0 0 6 0 0 0 1 6 1 6
+			*optiresponsesetequationdata1 "Comp" 0 0 0 0 1 0
+			*optiresponsesetequationdata2 "Comp" 0 0 1 0
+			*optiresponsesetequationdata3 "Comp" 0 0 1 0
+			*optiresponsesetequationdata4 "Comp" 0 0 0 0 1 0 1 0		
+		}
 		
 		# Create the design variable for each properties. 
 		*createmark props 1 all
@@ -675,9 +686,16 @@ namespace eval Optimization {
 		}
 		# Create the mass constraint.
 		eval *opticonstraintcreate "MassCon" 1 1 -1e+20 $MassCon 1 0
-	
-		# Create the compliance objective.
-		*optiobjectivecreate 2 0 1
+		
+		# Create the objective
+		if {$::General::Buckling} { 
+			*createarray 1 2
+			*optidobjrefcreate "Buck" 2 1 -1 1 1 1
+			*createarray 1 1
+			*optiminmaxcreate 3 1 1
+		} else {
+			*optiobjectivecreate 2 0 1
+		}
 	
 	
 	}
@@ -708,9 +726,16 @@ namespace eval Optimization {
 			*deletemark shapes 1
 		}
 		
+		catch {
+			*createmark objectives 1 "objective"
+			*deletemark objectives 1
+		}
 	}
 
 	proc SetSensiAnalysis {normalPath p_name} {
+		
+
+		
 		
 		# Read the sized properties from p_name.
 		set fp [open $normalPath/$p_name.hgdata]
@@ -731,6 +756,7 @@ namespace eval Optimization {
 	
 			if [string is integer [lindex $line 0]] {
 				append Start " $i"
+				append intValues "[lindex $line 0] "
 			}
 
 			incr i
@@ -751,6 +777,21 @@ namespace eval Optimization {
 			
 		}
 	
+		# Apply the shape deformations.
+		catch {
+		
+			set shapeFile "$normalPath/$p_name.res"
+			set iteration [lindex $intValues end]
+			
+			eval *analysisfileset $shapeFile
+			*inputsimulation "DESIGN \[$iteration\]" "Shape Change"
+			*createmark nodes 1 "all"
+			*applyresults nodes 1 1 "total disp"
+			
+		}
+
+		*clearmark nodes 1
+
 		# Create the global mass responses.
 		*createarray 6 0 0 0 0 0 0
 		*createdoublearray 6 0 0 0 0 0 0

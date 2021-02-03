@@ -188,8 +188,8 @@ proc setLinearBuckling {} {
 	# Create the EIGRL cardimage
 	*createentity loadcols includeid=3 name=EIGRL
 	*setvalue loadcols id=3 cardimage="EIGRL"
-	*setvalue loadcols id=3 STATUS=1 802=0.0001
-	*setvalue loadcols id=3 STATUS=1 804=60
+	*setvalue loadcols id=3 STATUS=1 802=1E-12
+	*setvalue loadcols id=3 STATUS=1 804=15
 
 	# Create the buckling loadsteps
 	*createentity loadsteps includeid=2 name=LinBuck
