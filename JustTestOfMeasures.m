@@ -71,19 +71,19 @@ for i = 1:length(Sensibilities)
 
     [s,v,d] = svd(Temp,0);
     
-%     imshow(v,[],'InitialMagnification',4000)
+    imshow(v,[],'InitialMagnification',4000)
+% %     title(SortedGraphs{i}.Code)
+    xlabel(i)
+%     
+% %     [R,T] = Reangularity(Temp);
+% 
+%     imshow((T+T')+eye(size(T)),[],'InitialMagnification',4000)
 %     title(SortedGraphs{i}.Code)
 %     xlabel(i)
+%     ylabel(R)
+%     
+%     disp(cond(Temp));
     
-    [R,T] = Reangularity(Temp);
-
-    imshow((T+T')+eye(size(T)),[],'InitialMagnification',4000)
-    title(SortedGraphs{i}.Code)
-    xlabel(i)
-    ylabel(R)
-    
-    disp(cond(Temp));
-    
-    pause 
+%     pause 
     
 end 

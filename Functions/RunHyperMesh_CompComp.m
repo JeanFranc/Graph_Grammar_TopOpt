@@ -1,4 +1,4 @@
-function [Compliance, Mass, Sensi] = RunHyperMesh_CompComp(Names,Values, folderName, echo)
+function [Compliance, Mass, Sensi, DPs, SingleCompliances] = RunHyperMesh_CompComp(Names,Values, folderName, echo)
 
 if isstring(folderName)
     folderName = char(folderName);
@@ -30,7 +30,7 @@ end
 
 % Extract the compliance. 
 fileName            = strcat(folderName, '\Prelim_Sizing.hgdata');
-[~,Responses]       = Parser_HgData_V2(fileName); 
+[~,Responses, ~]    = Parser_HgData_V2(fileName); 
 Compliance          = Responses(2);
 Mass                = Responses(1);
 
@@ -38,6 +38,11 @@ Mass                = Responses(1);
 fileName        = strcat(folderName, '\Complex_Anal.sensitivities.txt');
 sensibilities   = sortrows(readtable(fileName),1);
 sensibilities   = sensibilities(sensibilities.Mass ~= 0,:);
+
+fileName        = strcat(folderName, '\Complex_Anal.hgdata');
+[~,AllResponses, DPs]      = Parser_HgData_V2(fileName);
+
+SingleCompliances = AllResponses(2:end);
 
 Mat = table2array(sensibilities);
 Mas = Mat(:,2);

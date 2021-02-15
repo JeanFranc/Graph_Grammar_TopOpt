@@ -100,7 +100,7 @@ classdef Layout_Fixed_Grid
                 line([Pos(Point1,1) Pos(Point2,1)], [Pos(Point1,2) Pos(Point2,2)])
             end
     
-            if length(DispSym) == 2
+            if sum(DispSym) > 0
                
                 if DispSym(1) && DispSym(2)
                     for i = 1:size(EndNodes,1)
@@ -133,8 +133,9 @@ classdef Layout_Fixed_Grid
                     end
                 end
                 axis([-0.5 2.5 -0.5 2.5])
+                
             else
-                axis([-0.5 2.5 -0.5 2.5])
+                axis([-0.5 1.5 -0.5 1.5])
             end
             
             pbaspect([1 1 1])
@@ -425,7 +426,7 @@ classdef Layout_Fixed_Grid
              
         end
         
-        function [Response, Mass, Complexity, Sensi] = EvaluatePerformance(obj, folder, Symmetry, Buckling)
+        function [Response, Mass, Complexity, Sensi, DPs] = EvaluatePerformance(obj, folder, Symmetry, Buckling)
             
             EndNodes = obj.Graph.Edges.EndNodes;
             Pos       = table2array([obj.Graph.Nodes(:,'X'),obj.Graph.Nodes(:,'Y')]);
@@ -520,7 +521,7 @@ classdef Layout_Fixed_Grid
                         '::Optimization::MassCon'};
             if Buckling
                 Values = {  20,                     ...
-                            17,                     ...
+                            20,                     ...
                             1,                      ...
                             XBeg,                   ...
                             YBeg,                   ...
@@ -559,8 +560,8 @@ classdef Layout_Fixed_Grid
                             0.1,                    ...
                             68000,                  ...
                             0.5,                    ...
-                            100,                    ...% Axial = 120120, Other = 10;
-                            "Mario5Points",         ...% AxialCompression, TransverseCompression, PureShear, Pressure, Mario5Points.
+                            120120,                 ...% Axial = 120120, Other = 10;
+                            "AxialCompression",     ...% AxialCompression, TransverseCompression, PureShear, Pressure, Mario5Points.
                             "SimplySupported",      ...% Infinite, SimplySupported, Clamped, None. 
                             0,                      ...
                             0,                      ...
@@ -568,11 +569,13 @@ classdef Layout_Fixed_Grid
                             0,                      ...
                             5.0                     };           
                         
-                        [Compliance, Mass, Sensi] = RunHyperMesh_CompComp(Names, Values, folder,0);
-                        Response = Compliance;
+                        [TotalCompliance, Mass, Sensi, DPs, SingleCompliances] = RunHyperMesh_CompComp(Names, Values, folder,0);
+                        Response = TotalCompliance;
             end
             
-            Complexity = log10(cond(Sensi));
+            Complexity = log10(cond(Sensi,2));
+            
+%             Complexity = norm(Sensi) / (norm(SingleCompliances) / norm(DPs)); % Relative Conditionning Number.
             
             
         end

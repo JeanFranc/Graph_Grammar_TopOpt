@@ -1,4 +1,4 @@
-function [Labels, Responses] = Parser_HgData_V2(filePath)
+function [Labels, Responses, DPs] = Parser_HgData_V2(filePath)
 
 fid = fopen(filePath);
 tline = fgetl(fid);
@@ -26,7 +26,7 @@ Resp2               = {};
 for i = 1:length(DesignLines)
    Temp = DesignLines{i}; 
    Temp2 = split(Temp);
-   DesignVariables(i) = Temp2(3);
+   DesignVariables(i) = Temp2(4);
 end
 
 for i = 1:length(Resp1Lines)
@@ -41,33 +41,29 @@ for i = 1:length(Resp2Lines)
    Resp2(i) = Temp2(2);
 end
 
-LinesOfInterest = 2 + length(DesignVariables) + length(Resp1) + length(Resp2);
-LineStart       = length(tlines) - LinesOfInterest + length(DesignVariables) +2 ;
-
-Iter = LineStart+1:LineStart+length(Resp1Lines);
-
-% LineStart       = find(contains(tlines,'    0'));
-% 
-% for i = LineStart:LinesOfInterest:length(tlines)
-%     i
-% end
-% % %Find last iteration.
-% % LastIter        = floor((length(tlines)-LineStart) / LinesOfInterest)-1;
-% % LastIterLine    = LineStart + LastIter*(LinesOfInterest+1) + 1;
-% 
-% % Find responses:
-% Iter = LastIterLine+length(DesignVariables)+2:LastIterLine+LinesOfInterest-1;
-% Responses = zeros(length(Iter),1);
-
-for i = 1:length(Iter)
-    Responses(i) = str2double(tlines{Iter(i)});
+% Extract the Responses
+Total_LINES      = 2 + length(DesignVariables) + length(Resp1) + length(Resp2);
+RESP1START      = length(tlines) - Total_LINES + length(DesignVariables) +2 ;
+RESP1Iter       = RESP1START+1:RESP1START+length(Resp1Lines);
+Responses       = zeros(length(RESP1Iter),1);
+for i = 1:length(RESP1Iter)
+    Responses(i) = str2double(tlines{RESP1Iter(i)});
 end
 
+% Extract the labels of the responses
 Labels = "";
 for i = 1 : length(Resp1Lines)
     str = Resp1Lines(i);
     sp  = split(str);
-    Labels(i) = sp(4);
+    Labels(i,1) = string(strjoin(sp(3:end)));
+end
+
+% Extract the Design Variables
+DPSTART      = length(tlines) - Total_LINES ;
+DPIter       = DPSTART+1:DPSTART+length(DesignVariables);
+DPs          = zeros(length(DesignVariables),1);
+for i = 1:length(DPIter)
+    DPs(i) = str2double(tlines{DPIter(i)});
 end
 
 end

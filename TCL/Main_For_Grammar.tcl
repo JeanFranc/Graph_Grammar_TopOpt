@@ -71,15 +71,15 @@ set ::Steps::debugStream $debugStream
 set p_name Prelim_Sizing
 set maxIter 30
 ::Optimization::SetComplianceMassSizing
-# ::Optistruct::RunSizing $normalPath $p_name $maxIter
+::Optistruct::RunSizing $normalPath $p_name $maxIter
 
-# # Run a 0-step sizing optimization with the results from preliminary sizing.
-# set c_name Complex_Anal
-# ::Optimization::UnsetSizing
-# ::Optimization::SetSensiAnalysis $normalPath $p_name
-# ::Optistruct::RunComplex $normalPath $c_name 
-# ::Steps::printSensibilities $normalPath/$c_name
+# Run a 0-step sizing optimization with the results from preliminary sizing.
+set c_name Complex_Anal
+::Optimization::UnsetSizing
+::Optimization::SetSensiAnalysis $normalPath $p_name
+::Optistruct::RunComplex $normalPath $c_name 
+::Steps::printSensibilities $normalPath/$c_name
 
-# puts $debugStream "Closing Debug File"
-# close $debugStream
+puts $debugStream "Closing Debug File"
+close $debugStream
 

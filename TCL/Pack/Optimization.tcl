@@ -644,46 +644,48 @@ namespace eval Optimization {
 		}
 		
 		
-		# Create the morphing domains
-		*morphcreatedomaindc elements 0 -1 0 0 0 0
-		*morphstoredomains 1
-		*createmark elements 1 all
-		*morphcreatedomaindc elements 1 2 0 0 0 1
-		*createmark domains 1 all
-		*morphreparam domains 1
+		# # Create the morphing domains
+		# *morphcreatedomaindc elements 0 -1 0 0 0 0
+		# *morphstoredomains 1
+		# *createmark elements 1 all
+		# *morphcreatedomaindc elements 1 2 0 0 0 1
+		# *createmark domains 1 all
+		# *morphreparam domains 1
 
-		# Creates the shape for stiffener height
-		*createmark handles 1 all
-		set h1 [hm_getmark handles 1]
-		set handleList ""
+		# # Creates the shape for stiffener height
+		# *createmark handles 1 all
+		# set h1 [hm_getmark handles 1]
+		# set handleList ""
 
-		foreach handle $h1 {
-			set grid 		[hm_getentityvalue handle $handle grid 0]
-			set gridCoordz  [hm_getentityvalue node $grid globalz 0]	
-			if {$gridCoordz > 1.0} {
-				append handleList "local$handle "
-			}
-		}
+		# foreach handle $h1 {
+			# set grid 		[hm_getentityvalue handle $handle grid 0]
+			# set gridCoordz  [hm_getentityvalue node $grid globalz 0]	
+			# if {$gridCoordz > 1.0} {
+				# append handleList "local$handle "
+			# }
+		# }
 
-		if {[llength $handleList] > 0} {
+		# if {[llength $handleList] > 0} {
 
-			eval *createmark handles 1 $handleList
-			*morphhypermorph handles 1 0 0 1 1 1 1 0 1 1
+			# eval *createmark handles 1 $handleList
+			# *morphhypermorph handles 1 0 0 1 1 1 1 0 1 1
 
-			set id 1
-			set id300 301
+			# set id 1
+			# set id300 301
 
-			foreach handle $handleList {
+			# foreach handle $handleList {
 			
-				set name "$handle-Z"
-				*shpdesvarcreate $name 1.0 0.0 -1.0 0.5 $id
-				eval *setvalue designvars name=$name STATUS=2 id={designvars $id300}
+				# set name "$handle-Z"
+				# *shpdesvarcreate $name 1.0 0.0 -1.0 0.5 $id
+				# eval *setvalue designvars name=$name STATUS=2 id={designvars $id300}
 				
-				incr id
-				incr id300
-			}
+				# incr id
+				# incr id300
+			# }
 		
-		}
+		# }
+		
+		
 		# Create the mass constraint.
 		eval *opticonstraintcreate "MassCon" 1 1 -1e+20 $MassCon 1 0
 		
@@ -777,20 +779,20 @@ namespace eval Optimization {
 			
 		}
 	
-		# Apply the shape deformations.
-		catch {
+		# # Apply the shape deformations.
+		# catch {
 		
-			set shapeFile "$normalPath/$p_name.res"
-			set iteration [lindex $intValues end]
+			# set shapeFile "$normalPath/$p_name.res"
+			# set iteration [lindex $intValues end]
 			
-			eval *analysisfileset $shapeFile
-			*inputsimulation "DESIGN \[$iteration\]" "Shape Change"
-			*createmark nodes 1 "all"
-			*applyresults nodes 1 1 "total disp"
+			# eval *analysisfileset $shapeFile
+			# *inputsimulation "DESIGN \[$iteration\]" "Shape Change"
+			# *createmark nodes 1 "all"
+			# *applyresults nodes 1 1 "total disp"
 			
-		}
+		# }
 
-		*clearmark nodes 1
+		# *clearmark nodes 1
 
 		# Create the global mass responses.
 		*createarray 6 0 0 0 0 0 0

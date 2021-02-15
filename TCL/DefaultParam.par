@@ -1,9 +1,9 @@
 # PARAM1
 
 ::Geometry::PanelLength 20.0
-::Geometry::PanelHeight 16.66667
+::Geometry::PanelHeight 20.0
 
-::Geometry::NumberOfRibs 1
+::Geometry::NumberOfRibs 0
 
 
 #::Geometry::XBeg 	 "0           0.28        0.44        0.56        0.72    0 0 " 
@@ -34,10 +34,10 @@
 ::Material::rho			0.1
 ::Material::Fcy 		68000
 
-::Mesh::meshSize 		0.5
+::Mesh::meshSize 		0.25
 
 # ::BCs::SideConditions, choices : Infinite, SimplySupported,Clamped, None. 
-::BCs::SideConditions 	Infinite
+::BCs::SideConditions 	SimplySupported
 
 # ::BCs::LoadType, choices : AxialCompression, TransverseCompression, PureShear, Pressure, Mario5Points.
 ::BCs::LoadType 		AxialCompression
@@ -47,7 +47,7 @@
 
 # Set the Analysis required for your needs. 
 
-::General::Buckling 	1
+::General::Buckling 	0
 ::General::Stress 		0 
 
 ::General::Sizing 		1

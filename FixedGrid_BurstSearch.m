@@ -18,7 +18,7 @@ MaxLayouts  = 250;
 ArchiveSize = 8;
 
 % Initialize Layout. 
-Init.Layout       = Layout_Fixed_Grid(3,3);
+Init.Layout       = Layout_Fixed_Grid(5,5);
 Init.Code         = Init.Layout.getCode;
 
 [Init.Compliance, Init.Mass, Init.Complexity,Init.Sensibility]  = Init.Layout.EvaluatePerformance("D:\\Runs\\Evaluation_PreRun",[1 1],Buckling);
@@ -67,6 +67,7 @@ while length(CodeRegistry) <= MaxLayouts
         p(i,1) = TempArchive{i}.Compliance;
         p(i,2) = TempArchive{i}.Complexity;
     end
+    
     % Evaluate the pareto components. 
     [idxs] = paretoQS(p);  
     TruePareto = TempArchive(idxs);
@@ -123,7 +124,7 @@ while length(CodeRegistry) <= MaxLayouts
 
         try
             filename = sprintf("D:\\Runs\\Evaluation_%i",i);
-            [Burst{i}.Compliance, Burst{i}.Mass, Burst{i}.Complexity, Burst{i}.Sensi] = Burst{i}.Layout.EvaluatePerformance(filename,[1 1],1);
+            [Burst{i}.Compliance, Burst{i}.Mass, Burst{i}.Complexity, Burst{i}.Sensi] = Burst{i}.Layout.EvaluatePerformance(filename,[1 1],Buckling);
             fprintf('Evaluation %i completed. \n',i)
         catch Exception
              beep
