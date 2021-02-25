@@ -560,8 +560,8 @@ classdef Layout_Fixed_Grid
                             0.1,                    ...
                             68000,                  ...
                             0.5,                    ...
-                            120120,                 ...% Axial = 120120, Other = 10;
-                            "AxialCompression",     ...% AxialCompression, TransverseCompression, PureShear, Pressure, Mario5Points.
+                            10,                     ...% Axial = 120000, Other = 10;
+                            "Pressure",             ...% AxialCompression, TransverseCompression, PureShear, Pressure, Mario5Points.
                             "SimplySupported",      ...% Infinite, SimplySupported, Clamped, None. 
                             0,                      ...
                             0,                      ...
@@ -572,10 +572,29 @@ classdef Layout_Fixed_Grid
                         [TotalCompliance, Mass, Sensi, DPs, SingleCompliances] = RunHyperMesh_CompComp(Names, Values, folder,0);
                         Response = TotalCompliance;
             end
+ 
+            S                       = svd(Sensi);
+            CouplingInformation     = sum((1 - (S ./ max(S))).^2) / rank(Sensi); % WeightedEffectiveRank / NumberOfVariables.
             
-            Complexity = log10(cond(Sensi,2));
+            SensitivityInformation  = norm(Sensi) / (norm(SingleCompliances) / norm(DPs)); % Relative Conditionning Number.
+
+            %SuperFluousInformation
+            tol = 0.10;
+             
+            DP_NORM = [];
+            for j = 1:size(Sensi{i-1},1)
+               Vect_DP = Sensi(j,:); 
+               DP_NORM(j,1) = norm(Vect_DP);
+            end
+
+            SupInfo = find(DP_NORM./max(DP_NORM) > tol); 
             
-%             Complexity = norm(Sensi) / (norm(SingleCompliances) / norm(DPs)); % Relative Conditionning Number.
+            SuperFluousInformation = (length(DP_NORM) - length(SupInfo))/length(DP_NORM);
+            
+            Complexity = norm([CouplingInformation,SensitivityInformation,SuperFluousInformation]);
+            
+            %             Complexity = log10(cond(Sensi,2));            
+%             Complexity = norm(Sensi) / (norm(SingleCompliances) / norm(DPs)); 
             
             
         end

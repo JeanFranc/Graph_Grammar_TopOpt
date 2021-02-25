@@ -37,6 +37,8 @@ clear all
 clc
 close all
 
+addpath('Data')
+
 % load BigPressure_Archive.mat
 load ShortCompressionArchive.mat
 
