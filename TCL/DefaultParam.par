@@ -11,20 +11,20 @@
 #::Geometry::XEnd 	 "0.28        0.44        0.56        0.72        1.0     1 1.0" 
 #::Geometry::YEnd 	 "0.21        0.33        0.42        0.54        0.75    0 0.5" 
 
-#::Geometry::XBeg 	 " " 
-#::Geometry::YBeg 	 " " 
-#::Geometry::XEnd 	 " " 
-#::Geometry::YEnd 	 " " 
+::Geometry::XBeg 	 " " 
+::Geometry::YBeg 	 " " 
+::Geometry::XEnd 	 " " 
+::Geometry::YEnd 	 " " 
 
 # ::Geometry::XBeg 	 "0 0 0 0" 
 # ::Geometry::YBeg 	 "0.2 0.4 0.6 0.8" 
 # ::Geometry::XEnd 	 "1.0 1.0 1.0 1.0" 
 # ::Geometry::YEnd 	 "0.2 0.4 0.6 0.8" 
 
-::Geometry::XBeg 	 "0 0 0" 
-::Geometry::YBeg 	 "0.16667 0.5 0.83333333" 
-::Geometry::XEnd 	 "1.0 1.0 1.0" 
-::Geometry::YEnd 	 "0.16667 0.5 0.83333333" 
+#::Geometry::XBeg 	 "0 0 0" 
+#::Geometry::YBeg 	 "0.16667 0.5 0.83333333" 
+#::Geometry::XEnd 	 "1.0 1.0 1.0" 
+#::Geometry::YEnd 	 "0.16667 0.5 0.83333333" 
 
 ::Geometry::StiffHeight 	1.50000000
 
@@ -40,9 +40,9 @@
 ::BCs::SideConditions 	SimplySupported
 
 # ::BCs::LoadType, choices : AxialCompression, TransverseCompression, PureShear, Pressure, Mario5Points.
-::BCs::LoadType 		AxialCompression
+::BCs::LoadType 		Pressure
 #::BCs::Load 			120120
-::BCs::Load             120000
+::BCs::Load             10
 
 
 # Set the Analysis required for your needs. 
@@ -50,7 +50,7 @@
 ::General::Buckling 	0
 ::General::Stress 		0 
 
-::General::Sizing 		1
+::General::Sizing 		0
 ::General::Complexity 	0
 
 ::Optimization::MassCon  6.0

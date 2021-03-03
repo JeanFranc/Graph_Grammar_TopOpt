@@ -1,4 +1,4 @@
-function [Buckling, Mass, Sensi] = RunHyperMesh_BuckComp(Names,Values, folderName, echo)
+function [Buckling, Mass, Sensi, DPs, SingleCompliances] = RunHyperMesh_BuckComp(Names,Values, folderName, echo)
 
 if isstring(folderName)
     folderName = char(folderName);
@@ -38,6 +38,11 @@ Mass                = Responses(1);
 fileName        = strcat(folderName, '\Complex_Anal.sensitivities.txt');
 sensibilities   = sortrows(readtable(fileName),1);
 sensibilities   = sensibilities(sensibilities.Mass ~= 0,:);
+
+fileName                    = strcat(folderName, '\Complex_Anal.hgdata');
+[~,AllResponses, DPs]       = Parser_HgData_V2(fileName);
+
+SingleCompliances = AllResponses(2:end);
 
 Mat = table2array(sensibilities);
 Mas = Mat(:,2);

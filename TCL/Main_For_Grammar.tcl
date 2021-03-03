@@ -69,8 +69,14 @@ set ::Steps::debugStream $debugStream
 
 # Run the sizing to get the proper value of compliance at given mass. 
 set p_name Prelim_Sizing
-set maxIter 30
-::Optimization::SetComplianceMassSizing
+set maxIter 60
+
+if {$::General::Buckling} {
+	::Optimization::SetBucklingMassSizing
+} else {
+	::Optimization::SetComplianceMassSizing
+}
+
 ::Optistruct::RunSizing $normalPath $p_name $maxIter
 
 # Run a 0-step sizing optimization with the results from preliminary sizing.

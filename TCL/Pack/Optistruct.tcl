@@ -66,7 +66,7 @@
 		# Launches optitruct and solves the problem once. 
 		hm_answernext "yes"
 		*feoutputwithdata "$home/templates/feoutput/optistruct/optistruct" "$solver_path.fem" 1 0 1 1 1
-		exec "$home/hwsolvers/scripts/optistruct.bat" "$solver_path.fem" -checkel NO
+		exec "$home/hwsolvers/scripts/optistruct.bat" "$solver_path.fem" -checkel NO -minlen 2000 -ramdisk 500
 		
 	}
 	

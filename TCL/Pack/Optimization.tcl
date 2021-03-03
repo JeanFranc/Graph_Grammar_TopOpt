@@ -702,6 +702,53 @@ namespace eval Optimization {
 	
 	}
  
+ proc SetBucklingMassSizing {} {
+	
+		# Add the global Mass Response
+		*createarray 6 0 0 0 0 0 0
+		*createdoublearray 6 0 0 0 0 0 0
+		*optiresponsecreate "Mass" 29 0 0 0 0 0 6 0 0 0 1 6 1 6
+		*optiresponsesetequationdata1 "Mass" 0 0 0 0 1 0
+		*optiresponsesetequationdata2 "Mass" 0 0 1 0
+		*optiresponsesetequationdata3 "Mass" 0 0 1 0
+		*optiresponsesetequationdata4 "Mass" 0 0 0 0 1 0 1 0
+
+		*createarray 6 0 0 0 0 0 0
+		*createdoublearray 6 0 0 0 0 0 0
+		*optiresponsecreate "Buck" 6 0 0 1 0 0 6 0 0 0 1 6 1 6
+		*optiresponsesetequationdata1 "Buck" 0 0 0 0 1 0
+		*optiresponsesetequationdata2 "Buck" 0 0 1 0
+		*optiresponsesetequationdata3 "Buck" 0 0 1 0
+		*optiresponsesetequationdata4 "Buck" 0 0 0 0 1 0 1 0
+
+		# Create the design variable for each properties. 
+		*createmark props 1 all
+		set allProps [hm_getmark props 1]
+		
+		foreach prop $allProps {
+		
+			set name [hm_getvalue property id=$prop dataname=name]
+			set subname [string range $name 0 3]
+			
+			if {$subname == "Skin"} {
+				eval *createentity designvariable name=$name id=$prop initialvalue=0.05 lowerbound=0.05 upperbound=0.5
+			} elseif {$subname == "Stif"} {
+				eval *createentity designvariable name=$name id=$prop initialvalue=0.50 lowerbound=0.05 upperbound=0.5
+			}
+			eval *createentity dvprels name=$name id=$prop property=1 propertyid={props $prop} desvarlist=$prop	
+		
+		}
+
+		# Create Buckling Constraint.
+		*createarray 1 2
+		*opticonstraintcreate "BuckCon" 2 0 1 1e+20 1 1
+		
+		# CreateMinMass Objective.
+		*optiobjectivecreate 1 0 0
+	
+	
+	}
+ 
 	proc UnsetSizing {} {
 		catch {
 			*createmark optiresponses 1 all

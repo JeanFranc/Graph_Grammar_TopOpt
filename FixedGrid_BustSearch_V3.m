@@ -11,7 +11,7 @@ addpath('TCL')
 %% Initialize Parameters
 % Structural Parameters
 Buckling = 0;
-Symmetry = [1 1];
+Symmetry = [0 1];
 
 % Search Parameters
 SubSteps    = 8; % Burst Size;
@@ -40,9 +40,21 @@ CompletedRegistry        = {};
 
 tic
 
+ConvergenceHistory = [];
+ConvI              = 1;
+
 while length(CodeRegistry) <= MaxLayouts
     
     clc
+    
+    TEMP_COMP = [];
+    for i = 1:length(Archive)
+       TEMP_COMP(i,1) = Archive{i}.Compliance;
+    end
+    
+    ConvergenceHistory(ConvI) = min(TEMP_COMP);
+    ConvI = ConvI + 1;
+    
     
     % Check if a given layout as been completely explored 
     % So, check if it is a dead-end.
@@ -92,6 +104,12 @@ while length(CodeRegistry) <= MaxLayouts
     
     end
 
+
+    
+    figure(420)
+    clf
+    plot(ConvergenceHistory,'x-')
+    
     QueueID_Pareto  = randi(length(TruePareto),SubSteps,1);
     Queue           = TruePareto(QueueID_Pareto);
     
@@ -211,7 +229,9 @@ while length(CodeRegistry) <= MaxLayouts
     scatter(p(:,2),p(:,1),'ro')
     hold on
     scatter(b(:,2),b(:,1),'bx')
-    xlabel('TESTING ZONE')
+    title('Archive of the Exploration.')
+    ylabel('Total Compliance')
+    xlabel('Complexity')
     pause(0.005) % Pause to update figures
              
     beep
