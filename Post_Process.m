@@ -9,13 +9,15 @@ addpath('Data')
 % load FullPressure500.mat
 % load FullCompression500_XSYM.mat
 % load FullPressure500_SecondRun.mat
-load FullCompression500_BUCKLING.mat
+load FullCompression500.mat
+% load FullCompression500_BUCKLING_MASS.mat
+
 
 % Get all data.
 
 TEMP_COMP = [];
 for i = 1:length(Archive)
-    TEMP_COMP(i,1) = Archive{i}.Bucklign;
+    TEMP_COMP(i,1) = Archive{i}.Compliance;
     TEMP_COMP(i,2) = Archive{i}.Complexity;
     TEMP_COMP(i,3) = Archive{i}.Mass;
 end
@@ -58,4 +60,9 @@ figure(3)
 clf
 plot(ConvergenceHistory,'x-')
 ylabel('Compliance')
+xlabel('Iterations')
 set(gca, 'FontName', 'Times New Roman','FontSize',12)
+ylim([0 max(ConvergenceHistory) * 1.15])
+
+%%
+

@@ -17,7 +17,7 @@ Symmetry = [1 1];
 SubSteps    = 8; % Burst Size;
 MaxLayouts  = 500;
 maxEdges    = 20;
-% ArchiveSize = 8;
+r           = 3;
 
 % Initialize Layout. 
 Init.Layout       = Layout_Fixed_Grid(4,4);
@@ -83,8 +83,9 @@ while length(CodeRegistry) <= MaxLayouts
         TruePareto = TempArchive;
     else
         
+        % Ensures that the pareto contains at least N/r.
         TruePareto = {};
-        while length(TruePareto) < SubSteps/3
+        while length(TruePareto) < SubSteps/r
             
             % Build the model for Pareto Evaluation.
             p = [];

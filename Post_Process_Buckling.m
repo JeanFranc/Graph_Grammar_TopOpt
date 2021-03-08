@@ -37,13 +37,13 @@ for i = 1:length(ParetoID)
     subplot(subSize,subSize,i)
     TempArchive{ParetoID(i)}.Layout.PlotGraph(0,0,Symmetry);
     
-    t_label = sprintf('Complexity: %1.2f\nBuckling: %3.2f\nMass: %3.2f',...
+    t_label = sprintf('Complexity: %1.2f\nMass: %3.2f',...
         TempArchive{ParetoID(i)}.Complexity,...
-        TempArchive{ParetoID(i)}.Buckling,...
         TempArchive{ParetoID(i)}.Mass);
     
     set(gca,'YTickLabel',[]);
     set(gca,'XTickLabel',[]);
+    set(gca,'FontName', 'Times New Roman', 'FontSize',12)
     
     xlabel(t_label)
     
